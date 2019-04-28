@@ -34,6 +34,9 @@ import java.util.concurrent.ConcurrentMap;
 
 import gudy.azureus2.core3.util.BDecoder;
 import lbms.plugins.mldht.kad.DHT.LogLevel;
+import lbms.plugins.mldht.kad.messages.AnnounceRequest;
+import lbms.plugins.mldht.kad.messages.FindNodeRequest;
+import lbms.plugins.mldht.kad.messages.GetPeersRequest;
 import lbms.plugins.mldht.kad.messages.MessageBase;
 import lbms.plugins.mldht.kad.messages.MessageBase.Type;
 import lbms.plugins.mldht.kad.messages.MessageDecoder;
