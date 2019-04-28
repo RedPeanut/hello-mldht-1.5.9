@@ -1,11 +1,15 @@
 package gudy.azureus2.core3.util;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import gudy.azureus2.core3.util.Constants;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public class BEncoder {
 
@@ -18,8 +22,14 @@ public class BEncoder {
 	
 	private final byte[]	intBuffer		= new byte[12];
 	
-	public static byte[] encode(Map object) {
-		BEncoder encoder = new BEncoder();
+	private final boolean	urlEncode;
+	
+	private BEncoder(boolean _urlEncode) {
+		urlEncode	= _urlEncode;
+	}
+	
+	public static byte[] encode(Map object) throws IOException {
+		BEncoder encoder = new BEncoder(false);
 		encoder.encodeObject(object);
 		return encoder.toByteArray();
 	}
@@ -45,13 +55,14 @@ public class BEncoder {
 				pos += len;
 				//str += (str.length()==0?"":",") + len;
 			}
-	  		System.arraycopy(currentBuffer, 0, res, pos, currentBufferPos);
+			System.arraycopy(currentBuffer, 0, res, pos, currentBufferPos);
 			//System.out.println("-> " + str + "," + current_buffer_pos);
-	  		return (res);
+			return (res);
 		}
 	}
 
-	private void encodeObject(Object object) {
+	private boolean encodeObject(Object object) throws IOException {
+		
 		if (object instanceof String || object instanceof Float || object instanceof Double) {
 			String tempString = (object instanceof String) ? (String)object : String.valueOf(object);
 			// usually this is simpler to encode by hand as chars < 0x80 map directly in UTF-8
@@ -78,10 +89,106 @@ public class BEncoder {
 				writeByteBuffer(bb);
 			}
 		} else if (object instanceof Map) {
+			Map tempMap = (Map)object;
+			SortedMap tempTree = null;
 			
+			// unfortunately there are some occasions where we want to ensure that
+			// the 'key' of the map is not mangled by assuming its UTF-8 encodable.
+			// In particular the response from a tracker scrape request uses the
+			// torrent hash as the KEY. Hence the introduction of the type below
+			// to allow the constructor of the Map to indicate that the keys should
+			// be extracted using a BYTE_ENCODING
+			boolean	byte_keys = object instanceof ByteEncodedKeyHashMap;
+			//write the d
+			writeChar('d');
+			//are we sorted?
+			if (tempMap instanceof TreeMap) {
+				tempTree = (TreeMap)tempMap;
+			} else {
+				tempTree = new TreeMap(tempMap);
+			}
+			Iterator	it = tempTree.entrySet().iterator();
+			while (it.hasNext()) {
+				Map.Entry	entry = (Map.Entry)it.next();
+				Object o_key = entry.getKey();
+				Object value = entry.getValue();
+				if (value != null) {
+					if (o_key instanceof byte[]) {
+						encodeObject(o_key);
+						if (!encodeObject(value))
+							encodeObject("");
+					} else if (o_key instanceof String) {
+						String key = (String) o_key;
+						if (byte_keys) {
+							try {
+								encodeObject(Constants.BYTE_CHARSET.encode(key));
+								if (!encodeObject(value))
+									encodeObject("");
+							} catch (UnsupportedEncodingException e) {
+								throw (new IOException("BEncoder: unsupport encoding: " + e.getMessage()));
+							}
+						} else {
+							encodeObject(key); // Key goes in as UTF-8
+							if (!encodeObject(value))
+								encodeObject("");
+						}
+					} else
+						Debug.out("Attempt to encode an unsupported map key type: " + object.getClass() + ";value=" + object);
+				}
+			}
+			writeChar('e');
 		} else if (object instanceof List) {
-			
+			List tempList = (List)object;
+			//write out the l
+			writeChar('l');
+			for (int i = 0; i<tempList.size(); i++) {
+				encodeObject( tempList.get(i));
+			}
+			writeChar('e');
+		} else if (object instanceof Long) {
+			Long tempLong = (Long)object;
+			//write out the l
+			writeChar('i');
+			writeLong(tempLong.longValue());
+			writeChar('e');
+		} else if (object instanceof byte[]) {
+			byte[] tempByteArray = (byte[])object;
+			writeInt(tempByteArray.length);
+			writeChar(':');
+			if (urlEncode) {
+				writeBytes(URLEncoder.encode(new String(tempByteArray, Constants.BYTE_ENCODING), Constants.BYTE_ENCODING ).getBytes());
+			} else {
+				writeBytes(tempByteArray);
+			}
+		} else if (object instanceof Integer) {
+			Integer tempInteger = (Integer)object;
+			//write out the l
+			writeChar('i');
+			writeInt(tempInteger.intValue());
+			writeChar('e');
+		} else if (object instanceof Byte) {
+			byte temp = (Byte)object;
+			writeChar('i');
+			writeInt(temp & 0x000000ff);
+			writeChar('e');
+		} else if (object instanceof ByteBuffer) {
+				ByteBuffer  bb = (ByteBuffer)object;
+				writeInt(bb.limit());
+				writeChar(':');
+			writeByteBuffer(bb);
+		} else if (object == null) {
+			// ideally we'd bork here but I don't want to run the risk of breaking existing stuff so just log
+			Debug.out("Attempt to encode a null value: sofar=" + getEncodedSoFar());
+			return false;
+		} else {
+			Debug.out("Attempt to encode an unsupported entry type: " + object.getClass() + ";value=" + object);
+			return false;
 		}
+		return true;
+	}
+	
+	private String getEncodedSoFar() {
+		return (new String(toByteArray()));
 	}
 	
 	private void writeChar(char c) {

@@ -9,8 +9,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import hello.mldht.utils.Formatters;
@@ -63,16 +65,16 @@ public class UI {
 	
 	//Composite panel;
 	
-	private void initialize(Composite parent) {
+	private void initialize(Composite shell) {
 		//panel = new Composite(parent, SWT.NULL);
 		
 		GridLayout gl = new GridLayout();
-		parent.setLayout(gl);
+		shell.setLayout(gl);
 		
 		GridData gridData = new GridData(GridData.FILL_BOTH);
-		parent.setLayoutData(gridData);
+		shell.setLayoutData(gridData);
 
-		final ScrolledComposite scrollComposite = new ScrolledComposite(parent,
+		final ScrolledComposite scrollComposite = new ScrolledComposite(shell,
 				SWT.V_SCROLL | SWT.H_SCROLL);
 
 		final Composite compOnSC = new Composite(scrollComposite, SWT.None);
@@ -93,6 +95,16 @@ public class UI {
 		scrollComposite.setContent(compOnSC);
 		scrollComposite.setExpandVertical(true);
 		scrollComposite.setExpandHorizontal(true);
+		
+		Listener l = new Listener() {
+			public void handleEvent(Event event) {
+				if (event.type == SWT.Close) {
+					Log.d(TAG, "SWT.Close is occured");
+				} 
+			}
+		};
+		//shell.getShell().addListener(SWT.Activate, l);
+		shell.getShell().addListener(SWT.Close, l);
 	}
 	
 	private Formatters			formatters;
@@ -386,8 +398,12 @@ public class UI {
 							Log.d(TAG, "sentBytesPerSec = " + sentBytesPerSec);*/
 							
 							long uptimeSec = (System.currentTimeMillis() - stats.getStartedTimestamp()) / 1000;
-							long avgReceivedBytes = rpc.getReceivedBytes() / uptimeSec;
-							long avgSentBytes = rpc.getSentBytes() / uptimeSec;
+							/*long avgReceivedBytes = rpc.getReceivedBytes() / uptimeSec;
+							long avgSentBytes = rpc.getSentBytes() / uptimeSec;*/
+							
+							uptime.setText(formatters.formatTimeFromSeconds(uptimeSec));
+							avgReceivedBytes.setText(formatters.formatByteCountToKiBEtcPerSec(rpc.getReceivedBytes() / uptimeSec));
+							avgSentBytes.setText(formatters.formatByteCountToKiBEtcPerSec(rpc.getSentBytes() / uptimeSec));
 							
 							for (int i = 0; i < 4; i++) {
 								Method m = Method.values()[i];
