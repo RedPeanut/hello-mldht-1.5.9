@@ -342,17 +342,18 @@ public class BDecoder {
 		if (nesting == 0 && !dbis.markSupported()) {
 			throw new IOException("InputStream must support the mark() method");
 		}
+		
 		//set a mark
 		dbis.mark(1);
 		//read a byte
 		int tempByte = dbis.read();
 		//decide what to do
 		switch (tempByte) {
-			case 'd' :
+			case 'd':
 				//create a new dictionary object
 				LightHashMap tempMap = new LightHashMap();
 				try {
-					byte[]	prev_key = null;
+					byte[]	prevKey = null;
 					//get the key
 					while (true) {
 						dbis.mark(1);
@@ -360,6 +361,7 @@ public class BDecoder {
 						if (tempByte == 'e' || tempByte == -1)
 							break; // end of map
 						dbis.reset();
+						
 						// decode key strings manually so we can reuse the bytebuffer
 						int keyLength = (int)getPositiveNumberFromStream(dbis, ':');
 						int skipBytes = 0;
@@ -367,7 +369,7 @@ public class BDecoder {
 							skipBytes = keyLength - MAX_MAP_KEY_SIZE;
 							keyLength = MAX_MAP_KEY_SIZE;
 							//new Exception().printStackTrace();
-							//throw (new IOException( msg));
+							//throw (new IOException(msg));
 						}
 						if (keyLength < keyBytesBuffer.capacity()) {
 							keyBytesBuffer.position(0).limit(keyLength);
@@ -413,7 +415,7 @@ public class BDecoder {
 									+ ": skipping key starting with " + new String(key.substring(0, 128));
 							System.err.println(msg);
 						} else {
-		  					if (tempMap.put( key, value) != null) {
+		  					if (tempMap.put(key, value) != null) {
 		  						Debug.out("BDecoder: key '" + key + "' already exists!");
 		  					}
 						}
@@ -434,7 +436,7 @@ public class BDecoder {
 				tempMap.compactify(-0.9f);
 				//return the map
 				return tempMap;
-			case 'l' :
+			case 'l':
 				//create the list
 				ArrayList tempList = new ArrayList();
 				try {
@@ -458,34 +460,34 @@ public class BDecoder {
 				}
 				//return the list
 				return tempList;
-			case 'e' :
-			case -1 :
+			case 'e':
+			case -1:
 				return null;
-			case 'i' :
+			case 'i':
 				return Long.valueOf(getNumberFromStream(dbis, 'e'));
-			case '0' :
-			case '1' :
-			case '2' :
-			case '3' :
-			case '4' :
-			case '5' :
-			case '6' :
-			case '7' :
-			case '8' :
-			case '9' :
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
 				//move back one
 				dbis.reset();
 				//get the string
 				return getByteArrayFromStream(dbis, context);
 			default :{
-				int	rem_len = dbis.available();
-				if (rem_len > 256) {
-					rem_len	= 256;
+				int	remLen = dbis.available();
+				if (remLen > 256) {
+					remLen	= 256;
 				}
-				byte[] rem_data = new byte[rem_len];
-				dbis.read(rem_data);
+				byte[] remData = new byte[remLen];
+				dbis.read(remData);
 				throw (new BEncodingException(
-						"BDecoder: unknown command '" + tempByte + ", remainder = " + new String(rem_data)));
+						"BDecoder: unknown command '" + tempByte + ", remainder = " + new String(remData)));
 			}
 		}
 	}
@@ -512,79 +514,78 @@ public class BDecoder {
 		return (decode(new BDecoderInputStreamArray(data, offset, length),internKeys));
 	}
 	
-	private static class BDecoderInputStreamArray
-	extends InputStream {
-	final private byte[] bytes;
-	private int pos = 0;
-	private int markPos;
-	private final int overPos;
-
-	public BDecoderInputStreamArray(ByteBuffer buffer) {
-		bytes = buffer.array();
-		pos = buffer.arrayOffset() + buffer.position();
-		overPos = pos + buffer.remaining();
-	}
-
-
-	private BDecoderInputStreamArray(
-		byte[]		_buffer) {
-		bytes = _buffer;
-		overPos = bytes.length;
-	}
-
-	private BDecoderInputStreamArray(
-		byte[]		_buffer,
-		int			_offset,
-		int			_length) {
-		if (_offset == 0) {
+	private static class BDecoderInputStreamArray extends InputStream {
+		
+		final private byte[] bytes;
+		private int pos = 0;
+		private int markPos;
+		private final int overPos;
+	
+		public BDecoderInputStreamArray(ByteBuffer buffer) {
+			bytes = buffer.array();
+			pos = buffer.arrayOffset() + buffer.position();
+			overPos = pos + buffer.remaining();
+		}
+	
+	
+		private BDecoderInputStreamArray(byte[] _buffer) {
 			bytes = _buffer;
-			overPos = _length;
-		} else {
-			bytes = _buffer;
-			pos = _offset;
-			overPos = Math.min(_offset + _length, bytes.length);
+			overPos = bytes.length;
+		}
+	
+		private BDecoderInputStreamArray(
+			byte[]		_buffer,
+			int			_offset,
+			int			_length) {
+			if (_offset == 0) {
+				bytes = _buffer;
+				overPos = _length;
+			} else {
+				bytes = _buffer;
+				pos = _offset;
+				overPos = Math.min(_offset + _length, bytes.length);
+			}
+		}
+	
+		public int read() throws IOException {
+			if (pos < overPos) {
+				return bytes[pos++] & 0xFF;
+			}
+			return -1;
+		}
+	
+		public int read(byte[] buffer) throws IOException {
+			return (read(buffer, 0, buffer.length));
+		}
+	
+		public int read(
+			byte[] 	b,
+			int		offset,
+			int		length)
+			throws IOException {
+			if (pos < overPos) {
+				int toRead = Math.min(length, overPos - pos);
+				System.arraycopy(bytes, pos, b, offset, toRead);
+				pos += toRead;
+				return toRead;
+			}
+			return -1;
+		}
+	
+		public int available() throws IOException {
+			return overPos - pos;
+		}
+	
+		public boolean markSupported() {
+			return (true);
+		}
+	
+		public void mark(int limit) {
+			markPos = pos;
+		}
+	
+		public void reset() throws IOException {
+			pos = markPos;
 		}
 	}
-
-	public int read() throws IOException {
-		if (pos < overPos) {
-			return bytes[pos++] & 0xFF;
-		}
-		return -1;
-	}
-
-	public int read(byte[] buffer) throws IOException {
-		return (read(buffer, 0, buffer.length));
-	}
-
-	public int read(
-		byte[] 	b,
-		int		offset,
-		int		length )
-		throws IOException {
-		if (pos < overPos) {
-			int toRead = Math.min(length, overPos - pos);
-			System.arraycopy(bytes, pos, b, offset, toRead);
-			pos += toRead;
-			return toRead;
-		}
-		return -1;
-	}
-
-	public int available() throws IOException {
-		return overPos - pos;
-	}
-
-	public boolean markSupported() {
-		return (true);
-	}
-
-	public void mark(int limit) {
-		markPos = pos;
-	}
-
-	public void reset() throws IOException {
-		pos = markPos;
-	}
-}
 }

@@ -41,6 +41,7 @@ import java.util.*;
  * @create 28.11.2007
  */
 public class LightHashMap<S,T> extends AbstractMap<S,T> implements Cloneable {
+	
 	private static final Object	THOMBSTONE			= new Object();
 	private static final Object NULLKEY				= new Object();
 	private static final float	DEFAULT_LOAD_FACTOR	= 0.75f;
@@ -431,6 +432,7 @@ public class LightHashMap<S,T> extends AbstractMap<S,T> implements Cloneable {
 		for (int i = 0; i < fillData.length; i++)
 			m2.put(fillData[i], buffer);
 		System.out.println(System.currentTimeMillis() - time);
+		
 		System.out.println("replace-fill:");
 		time = System.currentTimeMillis();
 		for (int i = 0; i < fillData.length; i++)
@@ -440,6 +442,7 @@ public class LightHashMap<S,T> extends AbstractMap<S,T> implements Cloneable {
 		for (int i = 0; i < fillData.length; i++)
 			m2.put(fillData[i], buffer);
 		System.out.println(System.currentTimeMillis() - time);
+		
 		System.out.println("get:");
 		time = System.currentTimeMillis();
 		for (int i = 0; i < fillData.length; i++)
@@ -449,10 +452,12 @@ public class LightHashMap<S,T> extends AbstractMap<S,T> implements Cloneable {
 		for (int i = 0; i < fillData.length; i++)
 			m2.get(fillData[i]);
 		System.out.println(System.currentTimeMillis() - time);
+		
 		System.out.println("compactify light map");
 		time = System.currentTimeMillis();
 		((LightHashMap) m2).compactify(0.90f);
 		System.out.println(System.currentTimeMillis() - time);
+		
 		System.out.println("transfer to hashmap");
 		time = System.currentTimeMillis();
 		new HashMap(m1);
@@ -460,6 +465,7 @@ public class LightHashMap<S,T> extends AbstractMap<S,T> implements Cloneable {
 		time = System.currentTimeMillis();
 		new HashMap(m2);
 		System.out.println(System.currentTimeMillis() - time);
+		
 		System.out.println("transfer to lighthashmap");
 		time = System.currentTimeMillis();
 		new LightHashMap(m1);
@@ -467,6 +473,7 @@ public class LightHashMap<S,T> extends AbstractMap<S,T> implements Cloneable {
 		time = System.currentTimeMillis();
 		new LightHashMap(m2);
 		System.out.println(System.currentTimeMillis() - time);
+		
 		System.out.println("remove entry by entry");
 		time = System.currentTimeMillis();
 		for (int i = 0; i < fillData.length; i++)
@@ -488,8 +495,7 @@ public class LightHashMap<S,T> extends AbstractMap<S,T> implements Cloneable {
 		int hash = 0xc8d3 << 1;
 		int position = hash & (testArr.length -1);
 		int probe = 0;
-		do
-		{
+		do {
 			position = (hash + probe + probe * probe) & (testArr.length - 1);
 			probe++;
 			testArr[position] = true;

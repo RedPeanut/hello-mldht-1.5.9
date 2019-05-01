@@ -4,6 +4,8 @@ import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -15,6 +17,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
+import gudy.azureus2.core3.util.AESemaphore;
 import hello.mldht.utils.Formatters;
 import hello.util.Log;
 import lbms.plugins.mldht.kad.DHT;
@@ -30,6 +33,7 @@ public class UI {
 	private static String TAG = UI.class.getSimpleName();
 	
 	Map<DHTtype, DHT> dhts;
+	Display display;
 	
 	public UI(Map<DHTtype, DHT> dhts) {
 		this.dhts = dhts;
@@ -39,14 +43,14 @@ public class UI {
 		
 		formatters = new Formatters();
 		
-		Display display = new Display();
+		/*Display*/ display = new Display();
 		
 		Shell shell = new Shell(display);
 		shell.setText("Hello, world!");
 		//shell.setLayout(new FormLayout());
 		
 		initialize(shell);
-		activate(display);
+		activate(/*display*/);
 		
 		shell.pack();
 		refresh();
@@ -100,11 +104,21 @@ public class UI {
 			public void handleEvent(Event event) {
 				if (event.type == SWT.Close) {
 					Log.d(TAG, "SWT.Close is occured");
-				} 
+					
+				} else if (event.type == SWT.Deactivate) {
+					Log.d(TAG, "SWT.Deactivate is occured");
+					
+				} else if (event.type == SWT.Dispose) {
+					Log.d(TAG, "SWT.Dispose is occured");
+					stopDHT();
+					deactivate();
+				}
 			}
 		};
 		//shell.getShell().addListener(SWT.Activate, l);
 		shell.getShell().addListener(SWT.Close, l);
+		shell.getShell().addListener(SWT.Deactivate, l);
+		shell.getShell().addListener(SWT.Dispose, l);
 	}
 	
 	private Formatters			formatters;
@@ -216,6 +230,12 @@ public class UI {
 		dhtRunStatus = new Label(grp, SWT.None);
 		
 		dhtStartStop = new Button(grp, SWT.PUSH);
+		dhtStartStop.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected (SelectionEvent e) {
+				
+			}
+		});
 	}
 	
 	private void createRPCGroup (Composite comp) {
@@ -349,7 +369,7 @@ public class UI {
 		rtc = new RoutingTableCanvas(sc);
 	}
 	
-	private void activate(final Display display) {
+	private void activate(/*final Display display*/) {
 		
 		dhtStatsListener = new DHTStatsListener() {
 			
@@ -462,6 +482,46 @@ public class UI {
 		DHTtype type = DHTtype.IPV4_DHT;
 		dhts.get(type).removeStatsListener(dhtStatsListener);
 		rtc.setNode(null);
+	}
+	
+	private void stopDHT() {
+		
+		final AESemaphore sem = new AESemaphore("MLDHT:Stopper");
+		
+		/*display.asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					if (dhts != null) {
+						for (DHT dht : dhts.values()) {
+							dht.stop();
+						}
+					}
+				} finally {
+					sem.release();
+				}
+			}
+		});*/
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					if (dhts != null) {
+						for (DHT dht : dhts.values()) {
+							dht.stop();
+						}
+					}
+				} finally {
+					Log.d(TAG, "sem.release() is called...");
+					sem.release();
+				}
+			}
+		}).start();
+		
+		if (sem.reserve(30*1000) != 1) {
+			Log.d(TAG, "Timeout waiting for DHT to stop");
+		}
 	}
 	
 	private void refresh() {

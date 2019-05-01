@@ -151,7 +151,7 @@ public class KBucketEntry implements Serializable {
 		this.addr = addr;
 		this.nodeID = id;
 	}
-
+	
 	/**
 	 * Copy constructor.
 	 * @param other KBucketEntry to copy

@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import gudy.azureus2.core3.util.Debug;
 import gudy.azureus2.core3.util.LightHashMap;
+import hello.util.Log;
+import hello.util.Util;
 import lbms.plugins.mldht.DHTConfiguration;
 import lbms.plugins.mldht.kad.messages.MessageBase;
 import lbms.plugins.mldht.kad.messages.MessageBase.Type;
@@ -38,6 +40,8 @@ import lbms.plugins.mldht.kad.utils.AddressUtils;
  *
  */
 public class Node {
+	
+	private static String TAG = Node.class.getSimpleName();
 	
 	public static final class RoutingTableEntry implements Comparable<RoutingTableEntry> {
 		
@@ -444,6 +448,9 @@ public class Node {
 	 * @throws IOException
 	 */
 	void saveTable(File file, boolean forClose) throws IOException {
+		
+		Log.d(TAG, "saveTable() is called...");
+		
 		if (dataStore == null) {
 			return;
 		}
@@ -524,7 +531,8 @@ public class Node {
 	 * @param runWhenLoaded is executed when all load operations are finished
 	 * @throws IOException
 	 */
-	void loadTable (final Runnable runWhenLoaded) {
+	void loadTable(final Runnable runWhenLoaded) {
+		
 		boolean runDeferred = false;
 
 		try {
@@ -599,4 +607,17 @@ public class Node {
 		return Collections.unmodifiableList(routingTable) ;
 	}
 
+	public static void main(String args[]) {
+		File file = new File("./dht.cache");
+		ObjectInputStream ois = null;
+		try {
+			ois = new ObjectInputStream(new FileInputStream(file));
+			Util.printMap("", (Map<String, Serializable>) ois.readObject(), "");
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (ois != null)
+				try { ois.close(); } catch (IOException e) { e.printStackTrace(); }
+		}
+	}
 }
