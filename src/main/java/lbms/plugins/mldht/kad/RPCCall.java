@@ -61,7 +61,7 @@ public class RPCCall implements RPCCallBase {
 	/* (non-Javadoc)
 	 * @see lbms.plugins.mldht.kad.RPCCallBase#start()
 	 */
-	public void start () {
+	public void start() {
 		sentTime = System.currentTimeMillis();
 		queued = false;
 		startTimeout();
@@ -119,9 +119,9 @@ public class RPCCall implements RPCCallBase {
 		return queued;
 	}
 
-	private void startTimeout () {
+	private void startTimeout() {
 		timeoutTimer = DHT.getScheduler().schedule(new Runnable() {
-			public void run () {
+			public void run() {
 				// we stalled. for accurate measurement we still need to wait out the max timeout.
 				// Start a new timer for the remaining time
 				long elapsed = System.currentTimeMillis() - sentTime;
@@ -137,9 +137,6 @@ public class RPCCall implements RPCCallBase {
 				} else {
 					onCallTimeout();
 				}
-				
-				
-				
 			}
 		}, rpc.getTimeoutFilter().getStallTimeout(), TimeUnit.MILLISECONDS);
 	}

@@ -196,18 +196,18 @@ public class BEncoder {
 		if (rem > 0) {
 			currentBuffer[currentBufferPos++] = (byte)c;
 		} else {
-	   		int	next_buffer_size = currentBuffer.length < BUFFER_DOUBLE_LIMIT?(currentBuffer.length << 1):(currentBuffer.length + BUFFER_DOUBLE_LIMIT);
-			byte[]	new_buffer = new byte[ next_buffer_size ];
-			new_buffer[ 0 ] = (byte)c;
+	   		int	nextBufferSize = currentBuffer.length < BUFFER_DOUBLE_LIMIT?(currentBuffer.length << 1):(currentBuffer.length + BUFFER_DOUBLE_LIMIT);
+			byte[]	newBuffer = new byte[ nextBufferSize ];
+			newBuffer[ 0 ] = (byte)c;
 			if (oldBuffers == null) {
 				oldBuffers = new byte[][]{ currentBuffer };
 			} else {
-				byte[][] new_old_buffers = new byte[oldBuffers.length+1][];
-				System.arraycopy(oldBuffers, 0, new_old_buffers, 0, oldBuffers.length);
-				new_old_buffers[ oldBuffers.length ] = currentBuffer;
-				oldBuffers = new_old_buffers;
+				byte[][] newOldBuffers = new byte[oldBuffers.length+1][];
+				System.arraycopy(oldBuffers, 0, newOldBuffers, 0, oldBuffers.length);
+				newOldBuffers[ oldBuffers.length ] = currentBuffer;
+				oldBuffers = newOldBuffers;
 			}
-			currentBuffer		= new_buffer;
+			currentBuffer		= newBuffer;
 			currentBufferPos 	= 1;
 	 	}
    	}
@@ -237,8 +237,8 @@ public class BEncoder {
 	private void writeBytes(
 		byte[]			bytes,
 		int				offset,
-		int				length )
-	{
+		int				length) {
+		
 		int rem = currentBuffer.length - currentBufferPos;
 		if (rem >= length) {
 			System.arraycopy(bytes, offset, currentBuffer, currentBufferPos, length);
@@ -248,8 +248,8 @@ public class BEncoder {
 				System.arraycopy(bytes, offset, currentBuffer, currentBufferPos, rem);
 				length -= rem;
 			}
-			int	next_buffer_size = currentBuffer.length < BUFFER_DOUBLE_LIMIT?(currentBuffer.length << 1):(currentBuffer.length + BUFFER_DOUBLE_LIMIT);
-			byte[]	new_buffer = new byte[ Math.max(next_buffer_size, length + 512) ];
+			int	nextBufferSize = currentBuffer.length < BUFFER_DOUBLE_LIMIT?(currentBuffer.length << 1):(currentBuffer.length + BUFFER_DOUBLE_LIMIT);
+			byte[]	new_buffer = new byte[ Math.max(nextBufferSize, length + 512) ];
 			System.arraycopy(bytes, offset + rem, new_buffer, 0, length);
 			if (oldBuffers == null) {
 				oldBuffers = new byte[][]{ currentBuffer };

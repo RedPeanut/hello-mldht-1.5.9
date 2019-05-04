@@ -33,11 +33,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 
 import gudy.azureus2.core3.util.BDecoder;
+import hello.util.Log;
+import hello.util.SingleCounter0;
+import hello.util.SingleCounter9;
 import lbms.plugins.mldht.kad.DHT.LogLevel;
-import lbms.plugins.mldht.kad.messages.AnnounceRequest;
-import lbms.plugins.mldht.kad.messages.FindNodeRequest;
-import lbms.plugins.mldht.kad.messages.GetPeersRequest;
 import lbms.plugins.mldht.kad.messages.MessageBase;
+import lbms.plugins.mldht.kad.messages.MessageBase.Method;
 import lbms.plugins.mldht.kad.messages.MessageBase.Type;
 import lbms.plugins.mldht.kad.messages.MessageDecoder;
 import lbms.plugins.mldht.kad.messages.PingRequest;
@@ -71,9 +72,9 @@ public class RPCServer implements Runnable, RPCServerBase {
 	
 	private Key										derivedId;
 
-	public RPCServer(DHT dh_table, int port, RPCStats stats, RPCServerListener serverListener) {
+	public RPCServer(DHT dht, int port, RPCStats stats, RPCServerListener serverListener) {
 		this.port = port;
-		this.dht = dh_table;
+		this.dht = dht;
 		this.serverListener = serverListener;
 		timeoutFilter = new ResponseTimeoutFilter();
 		calls = new ConcurrentHashMap<ByteWrapper, RPCCallBase>(80,0.75f,3);
@@ -365,7 +366,7 @@ public class RPCServer implements Runnable, RPCServerBase {
 		// ignore port 0, can't respond to them anyway and responses to requests from port 0 will be useless too
 		if (p.getPort() == 0)
 			return;
-
+		
 		if (DHT.isLogLevelEnabled(LogLevel.Verbose)) {
 			try {
 				DHT.logVerbose(new String(p.getData(), 0, p.getLength(),
@@ -381,6 +382,20 @@ public class RPCServer implements Runnable, RPCServerBase {
 			if (msg != null) {
 				if (DHT.isLogLevelEnabled(LogLevel.Debug))
 					DHT.logDebug("RPC received message ["+p.getAddress().getHostAddress()+"] "+msg.toString());
+				
+				if (msg.getMethod() == Method.PING) {
+					//Log.d(TAG, "PING response is received...");
+				} else if (msg.getMethod() == Method.FIND_NODE) {
+					//Log.d(TAG, "FIND_NODE response is received...");
+					/*if (SingleCounter9.getInstance().getAndIncreaseCount() == 1)
+						new Throwable().printStackTrace();*/
+				} else if (msg.getMethod() == Method.GET_PEERS) {
+					//Log.d(TAG, "GET_PEERS response is received...");
+				} else if (msg.getMethod() == Method.ANNOUNCE_PEER) {
+					//Log.d(TAG, "ANNOUNCE_PEER response is received...");
+				}
+					
+				
 				stats.addReceivedMessageToCount(msg);
 				msg.setOrigin(new InetSocketAddress(p.getAddress(), p.getPort()));
 				msg.setServer(this);
@@ -425,7 +440,7 @@ public class RPCServer implements Runnable, RPCServerBase {
 		else if (msg instanceof PingRequest)
 			Log.d(TAG, "PingRequest is sent...");*/
 		
-		/*if (SingleCounter9.getInstance().getAndIncreaseCount() == 1)
+		/*if (SingleCounter0.getInstance().getAndIncreaseCount() == 1)
 			new Throwable().printStackTrace();*/
 		
 		try {
@@ -445,7 +460,7 @@ public class RPCServer implements Runnable, RPCServerBase {
 		return timeoutFilter;
 	}
 
-	private void send (InetSocketAddress addr, byte[] msg) throws IOException {
+	private void send(InetSocketAddress addr, byte[] msg) throws IOException {
 		if (!sock.isClosed()) {
 			DatagramPacket p = new DatagramPacket(msg, msg.length);
 			p.setSocketAddress(addr);

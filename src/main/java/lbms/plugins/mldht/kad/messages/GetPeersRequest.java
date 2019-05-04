@@ -37,7 +37,7 @@ public class GetPeersRequest extends AbstractLookupRequest {
 	 * @param id
 	 * @param info_hash
 	 */
-	public GetPeersRequest (Key info_hash) {
+	public GetPeersRequest(Key info_hash) {
 		super(info_hash,Method.GET_PEERS);
 	}
 
@@ -45,8 +45,8 @@ public class GetPeersRequest extends AbstractLookupRequest {
 	 * @see lbms.plugins.mldht.kad.messages.MessageBase#apply(lbms.plugins.mldht.kad.DHT)
 	 */
 	@Override
-	public void apply(DHT dh_table) {
-		dh_table.getPeers(this);
+	public void apply(DHT dht) {
+		dht.getPeers(this);
 	}
 	
 	@Override

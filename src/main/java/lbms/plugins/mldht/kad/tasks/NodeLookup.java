@@ -37,6 +37,7 @@ import lbms.plugins.mldht.kad.utils.PackUtil;
  *
  */
 public class NodeLookup extends Task {
+	
 	private int						validReponsesSinceLastClosestSetModification;
 	SortedSet<Key>					closestSet;
 	private Map<MessageBase, Key>	lookupMap;

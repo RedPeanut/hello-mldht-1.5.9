@@ -6,16 +6,23 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
 
 import gudy.azureus2.core3.util.AESemaphore;
 import hello.mldht.utils.Formatters;
@@ -32,24 +39,45 @@ public class UI {
 
 	private static String TAG = UI.class.getSimpleName();
 	
+	Launcher launcher;
 	Map<DHTtype, DHT> dhts;
 	Display display;
 	
-	public UI(Map<DHTtype, DHT> dhts) {
+	public UI(Launcher launcher, Map<DHTtype, DHT> dhts) {
+		this.launcher = launcher;
 		this.dhts = dhts;
 	}
 	
-	public void start() {
+	public static boolean isMac() {
+		if (System.getProperty("os.name").toLowerCase().startsWith("mac os"))
+			return true;
+		return false;
+	}
+	
+	public void start() throws Exception {
+		
+		if (isMac()) {
+			String platform = SWT.getPlatform();
+			if (platform.equals("carbon")) {
+				
+			} else if (platform.equals("cocoa")) {
+				//CocoaUIEnhancer enhancer = new CocoaUIEnhancer();
+				//enhancer.hookApplicationMenu();
+			}
+		}
 		
 		formatters = new Formatters();
 		
 		/*Display*/ display = new Display();
 		
+		
 		Shell shell = new Shell(display);
 		shell.setText("Hello, world!");
 		//shell.setLayout(new FormLayout());
 		
-		initialize(shell);
+		createMenus(shell);
+		initUI(shell);
+		addListener(shell);
 		activate(/*display*/);
 		
 		shell.pack();
@@ -67,18 +95,71 @@ public class UI {
 		display.dispose();
 	}
 	
-	//Composite panel;
+	public static final String KEY_MENU_ID = "key.menu.id";
+	public static final String MENU_ID_FILE = "MainWindow.menu.file";
 	
-	private void initialize(Composite shell) {
+	private void createMenus(Shell shell) {
+		
+		Menu menuBar = new Menu(shell, SWT.BAR);
+		
+		MenuItem fileMenuHeader = new MenuItem(menuBar, SWT.CASCADE);
+		fileMenuHeader.setText("파일(&F)");
+		
+		Menu fileMenu = new Menu(shell, SWT.DROP_DOWN);
+		fileMenuHeader.setMenu(fileMenu);
+		
+		MenuItem fileOpenItem = new MenuItem(fileMenu, SWT.PUSH);
+		fileOpenItem.addListener(SWT.Selection,
+			new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					System.out.println("handleEvent() is called...");
+				}
+			}
+		);
+		fileOpenItem.setText("열기(&O)");
+		
+		// 토렌트 파일...
+		// URL, 마그넷 또는 해쉬...
+		
+		shell.setMenuBar(menuBar);
+	}
+	
+	private void addListener(Composite shell) {
+		Listener l = new Listener() {
+			public void handleEvent(Event event) {
+				if (event.type == SWT.Close) {
+					Log.d(TAG, "SWT.Close is occured...");
+					
+				} else if (event.type == SWT.Deactivate) {
+					Log.d(TAG, "SWT.Deactivate is occured...");
+					
+				} else if (event.type == SWT.Dispose) {
+					Log.d(TAG, "SWT.Dispose is occured...");
+					launcher.stopDHT();
+					deactivate();
+				}
+			}
+		};
+		//shell.getShell().addListener(SWT.Activate, l);
+		shell.getShell().addListener(SWT.Close, l);
+		shell.getShell().addListener(SWT.Deactivate, l);
+		shell.getShell().addListener(SWT.Dispose, l);
+	}
+	
+	private Control getOne(TabFolder tabFolder) {
+		
+		Composite composite = new Composite(tabFolder, SWT.NONE);
+		
 		//panel = new Composite(parent, SWT.NULL);
 		
 		GridLayout gl = new GridLayout();
-		shell.setLayout(gl);
+		composite.setLayout(gl);
 		
 		GridData gridData = new GridData(GridData.FILL_BOTH);
-		shell.setLayoutData(gridData);
+		composite.setLayoutData(gridData);
 
-		final ScrolledComposite scrollComposite = new ScrolledComposite(shell,
+		final ScrolledComposite scrollComposite = new ScrolledComposite(composite,
 				SWT.V_SCROLL | SWT.H_SCROLL);
 
 		final Composite compOnSC = new Composite(scrollComposite, SWT.None);
@@ -100,25 +181,82 @@ public class UI {
 		scrollComposite.setExpandVertical(true);
 		scrollComposite.setExpandHorizontal(true);
 		
-		Listener l = new Listener() {
-			public void handleEvent(Event event) {
-				if (event.type == SWT.Close) {
-					Log.d(TAG, "SWT.Close is occured");
-					
-				} else if (event.type == SWT.Deactivate) {
-					Log.d(TAG, "SWT.Deactivate is occured");
-					
-				} else if (event.type == SWT.Dispose) {
-					Log.d(TAG, "SWT.Dispose is occured");
-					stopDHT();
-					deactivate();
-				}
+		return composite;
+	}
+	
+	private Control getTwo(TabFolder tabFolder) {
+		
+		Composite comp = new Composite(tabFolder, SWT.NONE);
+		
+		GridLayout gridLayout = new GridLayout();
+		comp.setLayout(gridLayout);
+		comp.setLayoutData(new GridData());
+		
+		Group group = new Group(comp, SWT.None);
+		group.setText("DHT Control");
+		
+		FillLayout fillLayout = new FillLayout();
+		fillLayout.type = SWT.VERTICAL;
+		group.setLayout(fillLayout);
+		group.setLayoutData(new GridData());
+		
+		Button button0 = new Button(group, SWT.PUSH);
+		button0.setText("button0");
+		button0.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected (SelectionEvent e) {
+				
 			}
-		};
-		//shell.getShell().addListener(SWT.Activate, l);
-		shell.getShell().addListener(SWT.Close, l);
-		shell.getShell().addListener(SWT.Deactivate, l);
-		shell.getShell().addListener(SWT.Dispose, l);
+		});
+		
+		Button button1 = new Button(group, SWT.PUSH);
+		button1.setText("button1");
+
+		Button button2 = new Button(group, SWT.PUSH);
+		button2.setText("button2");
+
+		Button button3 = new Button(group, SWT.PUSH);
+		button3.setText("button3");
+		
+		/*GridLayout gl = new GridLayout(2, false);
+		comp.setLayout(gl);
+		
+		GridData gd = new GridData(GridData.FILL_BOTH);
+		comp.setLayoutData(gd);
+		
+		Group grp = new Group(comp, SWT.None);
+		grp.setText("1번째 그룹...");
+		
+		grp = new Group(comp, SWT.None);
+		grp.setText("2번째 그룹...");
+		
+		grp = new Group(comp, SWT.None);
+		grp.setText("3번째 그룹...");
+		
+		grp = new Group(comp, SWT.None);
+		grp.setText("4번째 그룹...");*/
+		
+		return comp;
+	}
+	//Composite panel;
+	
+	private void initUI(Composite shell) {
+		
+		//shell.setLayout(new FillLayout());
+		shell.setLayout(new FormLayout());
+		
+		TabFolder tabFolder = new TabFolder(shell, SWT.NONE);
+
+	    TabItem one = new TabItem(tabFolder, SWT.NONE);
+	    one.setText("DHTView");
+	    one.setControl(getOne(tabFolder));
+		
+	    TabItem two = new TabItem(tabFolder, SWT.NONE);
+	    two.setText("ControlView");
+	    two.setControl(getTwo(tabFolder));
+	    
+	    //tabFolder.setSelection(0);
+	    
 	}
 	
 	private Formatters			formatters;
@@ -142,10 +280,18 @@ public class UI {
 	private Label				avgReceivedBytes;
 
 	private Label				dhtRunStatus;
-	private Label[][]			messageLabels;
 	private Button				dhtStartStop;
+	private Label				dhtUpdateScheduleStatus;
+	private Button				dhtUpdateScheduleStartStop;
+	private Label				expiredEntriesScheduleStatus;
+	private Button				expiredEntriesScheduleStartStop;
+	private Label				lookupScheduleStatus;
+	private Button				lookupScheduleStartStop;
+	
+	private Label[][]			messageLabels;
 
 	private Group				dhtStatsGroup;
+	private Group				dhtControlGroup;
 	private Group				serverStatsGroup;
 	private Group				messageStatsGroup;
 	private RoutingTableCanvas	rtc;
@@ -205,7 +351,8 @@ public class UI {
 	}
 	
 	private void createControlGroup(Composite comp) {
-		Group grp = new Group(comp, SWT.None);
+		//Group grp = new Group(comp, SWT.None);
+		Group grp = dhtControlGroup = new Group(comp, SWT.None);
 		grp.setText("DHT Control");
 
 		GridLayout gl = new GridLayout(3, false);
@@ -233,7 +380,69 @@ public class UI {
 		dhtStartStop.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected (SelectionEvent e) {
+				DHTtype type = DHTtype.IPV4_DHT;
 				
+				if (dhts.get(type).isRunning()) {
+					launcher.stopDHT();
+					deactivate();
+				} else {
+					launcher.startDHT();
+					activate();
+				}
+			}
+		});
+		
+		Label dhtUpdateScheduleLabel = new Label(grp, SWT.None);
+		dhtUpdateScheduleLabel.setText("DHT Update Schedule Status:");
+		
+		dhtUpdateScheduleStatus = new Label(grp, SWT.None);
+		
+		dhtUpdateScheduleStartStop = new Button(grp, SWT.PUSH);
+		dhtUpdateScheduleStartStop.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected (SelectionEvent e) {
+				DHTtype type = DHTtype.IPV4_DHT;
+				if (dhts.get(type).isDhtUpdateScheduleActive())
+					dhts.get(type).stopDhtUpdateSchedule();
+				else
+					dhts.get(type).startDhtUpdateSchedule();
+				updateDHTRunStatus();
+			}
+		});
+		
+		Label expiredEntriesScheduleLabel = new Label(grp, SWT.None);
+		expiredEntriesScheduleLabel.setText("Expired Entries Schedule Status:");
+		
+		expiredEntriesScheduleStatus = new Label(grp, SWT.None);
+		
+		expiredEntriesScheduleStartStop = new Button(grp, SWT.PUSH);
+		expiredEntriesScheduleStartStop.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected (SelectionEvent e) {
+				DHTtype type = DHTtype.IPV4_DHT;
+				if (dhts.get(type).isExpiredEntriesScheduleActive())
+					dhts.get(type).stopExpiredEntriesSchedule();
+				else
+					dhts.get(type).startExpiredEntriesSchedule();
+				updateDHTRunStatus();
+			}
+		});
+		
+		Label lookupScheduleLabel = new Label(grp, SWT.None);
+		lookupScheduleLabel.setText("Lookup Schedule Status:");
+		
+		lookupScheduleStatus = new Label(grp, SWT.None);
+		
+		lookupScheduleStartStop = new Button(grp, SWT.PUSH);
+		lookupScheduleStartStop.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected (SelectionEvent e) {
+				DHTtype type = DHTtype.IPV4_DHT;
+				if (dhts.get(type).isLookupScheduleActive())
+					dhts.get(type).stopLookupSchedule();
+				else
+					dhts.get(type).startLookupSchedule();
+				updateDHTRunStatus();
 			}
 		});
 	}
@@ -383,15 +592,6 @@ public class UI {
 
 						@Override
 						public void run() {
-							int numPeers = stats.getNumPeers();
-							int numTasks = stats.getNumTasks();
-							int keyCount = stats.getDbStats().getKeyCount();
-							int itemCount = stats.getDbStats().getItemCount();
-							int numSentPackets = stats.getNumSentPackets();
-							int numReceivedPackets = stats.getNumReceivedPackets();
-							int numRpcCalls = stats.getNumRpcCalls();
-							
-							//Log.d(TAG, "numPeers = " + numPeers);
 							
 							peerCount.setText(String.valueOf(stats.getNumPeers()));
 							taskCount.setText(String.valueOf(stats.getNumTasks()));
@@ -401,25 +601,16 @@ public class UI {
 							receivedPacketCount.setText(String.valueOf(stats.getNumReceivedPackets()));
 							activeRPCCount.setText(String.valueOf(stats.getNumRpcCalls()));
 							
+							//dhtUpdateScheduleStatus.setText();
+							
 							RPCStats rpc = stats.getRpcStats();
-							/*long receivedBytes = rpc.getReceivedBytes();
-							long sentBytes = rpc.getSentBytes();
-							long receivedBytesPerSec = rpc.getReceivedBytesPerSec();
-							long sentBytesPerSec = rpc.getSentBytesPerSec();*/
 							
 							receivedBytesTotal.setText(formatters.formatByteCountToKiBEtc(rpc.getReceivedBytes()));
 							sentBytesTotal.setText(formatters.formatByteCountToKiBEtc(rpc.getSentBytes()));
 							receivedBytes.setText(formatters.formatByteCountToKiBEtcPerSec(rpc.getReceivedBytesPerSec()));
 							sentBytes.setText(formatters.formatByteCountToKiBEtcPerSec(rpc.getSentBytesPerSec()));
 							
-							/*Log.d(TAG, "receivedBytes = " + receivedBytes);
-							Log.d(TAG, "sentBytes = " + sentBytes);
-							Log.d(TAG, "receivedBytesPerSec = " + receivedBytesPerSec);
-							Log.d(TAG, "sentBytesPerSec = " + sentBytesPerSec);*/
-							
 							long uptimeSec = (System.currentTimeMillis() - stats.getStartedTimestamp()) / 1000;
-							/*long avgReceivedBytes = rpc.getReceivedBytes() / uptimeSec;
-							long avgSentBytes = rpc.getSentBytes() / uptimeSec;*/
 							
 							uptime.setText(formatters.formatTimeFromSeconds(uptimeSec));
 							avgReceivedBytes.setText(formatters.formatByteCountToKiBEtcPerSec(rpc.getReceivedBytes() / uptimeSec));
@@ -436,6 +627,7 @@ public class UI {
 							}
 							
 							dhtStatsGroup.layout();
+							//dhtControlGroup.layout();
 							serverStatsGroup.layout();
 							messageStatsGroup.layout();
 							
@@ -462,6 +654,12 @@ public class UI {
 		DHTtype type = DHTtype.IPV4_DHT;
 		boolean isRunning = dhts.get(type).isRunning();
 		
+		if (ourID != null && !ourID.isDisposed()) {
+			ourID.setText((dhts.get(type).isRunning()) ?
+					dhts.get(type).getOurID().toString()
+					: "XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX");
+		}
+		
 		if (dhtRunStatus != null && !dhtRunStatus.isDisposed()) {
 			dhtRunStatus.setText((dhts.get(type).isRunning()) ? "Running"
 					: "Stopped");
@@ -471,57 +669,45 @@ public class UI {
 			dhtStartStop.setText((dhts.get(type).isRunning()) ? "Stop"
 					: "Start");
 		}
-		if (ourID != null && !ourID.isDisposed()) {
-			ourID.setText((dhts.get(type).isRunning()) ?
-					dhts.get(type).getOurID().toString()
-					: "XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX");
+		
+		if (dhtUpdateScheduleStatus != null && !dhtUpdateScheduleStatus.isDisposed()) {
+			dhtUpdateScheduleStatus.setText((dhts.get(type).isDhtUpdateScheduleActive()) ? "Active"
+					: "Inactive");
 		}
+		
+		if (dhtUpdateScheduleStartStop != null && !dhtUpdateScheduleStartStop.isDisposed()) {
+			dhtUpdateScheduleStartStop.setText((dhts.get(type).isDhtUpdateScheduleActive()) ? "Stop"
+					: "Start");
+		}
+		
+		if (expiredEntriesScheduleStatus != null && !expiredEntriesScheduleStatus.isDisposed()) {
+			expiredEntriesScheduleStatus.setText((dhts.get(type).isExpiredEntriesScheduleActive()) ? "Active"
+					: "Inactive");
+		}
+		
+		if (expiredEntriesScheduleStartStop != null && !expiredEntriesScheduleStartStop.isDisposed()) {
+			expiredEntriesScheduleStartStop.setText((dhts.get(type).isExpiredEntriesScheduleActive()) ? "Stop"
+					: "Start");
+		}
+		
+		if (lookupScheduleStatus != null && !lookupScheduleStatus.isDisposed()) {
+			lookupScheduleStatus.setText((dhts.get(type).isLookupScheduleActive()) ? "Active"
+					: "Inactive");
+		}
+		
+		if (lookupScheduleStartStop != null && !lookupScheduleStartStop.isDisposed()) {
+			lookupScheduleStartStop.setText((dhts.get(type).isLookupScheduleActive()) ? "Stop"
+					: "Start");
+		}
+		
+		dhtControlGroup.layout();
+		
 	}
 	
 	private void deactivate() {
 		DHTtype type = DHTtype.IPV4_DHT;
 		dhts.get(type).removeStatsListener(dhtStatsListener);
 		rtc.setNode(null);
-	}
-	
-	private void stopDHT() {
-		
-		final AESemaphore sem = new AESemaphore("MLDHT:Stopper");
-		
-		/*display.asyncExec(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					if (dhts != null) {
-						for (DHT dht : dhts.values()) {
-							dht.stop();
-						}
-					}
-				} finally {
-					sem.release();
-				}
-			}
-		});*/
-		
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					if (dhts != null) {
-						for (DHT dht : dhts.values()) {
-							dht.stop();
-						}
-					}
-				} finally {
-					Log.d(TAG, "sem.release() is called...");
-					sem.release();
-				}
-			}
-		}).start();
-		
-		if (sem.reserve(30*1000) != 1) {
-			Log.d(TAG, "Timeout waiting for DHT to stop");
-		}
 	}
 	
 	private void refresh() {

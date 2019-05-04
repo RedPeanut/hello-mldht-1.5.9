@@ -49,7 +49,7 @@ public class PingRefreshTask extends Task {
 	 * @param bucket the bucket to refresh
 	 * @param cleanOnTimeout if true Nodes that fail to respond are removed. should be false for normal use.
 	 */
-	public PingRefreshTask (RPCServerBase rpc, Node node, KBucket bucket,
+	public PingRefreshTask(RPCServerBase rpc, Node node, KBucket bucket,
 			boolean cleanOnTimeout) {
 		super(node.getRootID(),rpc, node);
 		this.cleanOnTimeout = cleanOnTimeout;
@@ -72,7 +72,7 @@ public class PingRefreshTask extends Task {
 	 * @param bucket the bucket to refresh
 	 * @param cleanOnTimeout if true Nodes that fail to respond are removed. should be false for normal use.
 	 */
-	public PingRefreshTask (RPCServerBase rpc, Node node, List<RoutingTableEntry> buckets,
+	public PingRefreshTask(RPCServerBase rpc, Node node, List<RoutingTableEntry> buckets,
 			boolean cleanOnTimeout) {
 		super(node.getRootID(), rpc, node,"Multi Bucket Refresh");
 		this.cleanOnTimeout = cleanOnTimeout;
@@ -91,7 +91,7 @@ public class PingRefreshTask extends Task {
 	 * @see lbms.plugins.mldht.kad.Task#callFinished(lbms.plugins.mldht.kad.RPCCallBase, lbms.plugins.mldht.kad.messages.MessageBase)
 	 */
 	@Override
-	void callFinished (RPCCallBase c, MessageBase rsp) {
+	void callFinished(RPCCallBase c, MessageBase rsp) {
 		if (cleanOnTimeout) {
 			synchronized (lookupMap) {
 				lookupMap.remove(c.getRequest());

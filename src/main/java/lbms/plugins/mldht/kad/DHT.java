@@ -17,9 +17,23 @@
 package lbms.plugins.mldht.kad;
 
 import java.io.File;
-import java.net.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import gudy.azureus2.core3.util.SystemTime;
@@ -27,9 +41,24 @@ import hello.util.Log;
 import hello.util.Util;
 import lbms.plugins.mldht.DHTConfiguration;
 import lbms.plugins.mldht.kad.Node.RoutingTableEntry;
-import lbms.plugins.mldht.kad.messages.*;
+import lbms.plugins.mldht.kad.messages.AnnounceRequest;
+import lbms.plugins.mldht.kad.messages.AnnounceResponse;
+import lbms.plugins.mldht.kad.messages.ErrorMessage;
 import lbms.plugins.mldht.kad.messages.ErrorMessage.ErrorCode;
-import lbms.plugins.mldht.kad.tasks.*;
+import lbms.plugins.mldht.kad.messages.FindNodeRequest;
+import lbms.plugins.mldht.kad.messages.FindNodeResponse;
+import lbms.plugins.mldht.kad.messages.GetPeersRequest;
+import lbms.plugins.mldht.kad.messages.GetPeersResponse;
+import lbms.plugins.mldht.kad.messages.MessageBase;
+import lbms.plugins.mldht.kad.messages.PingRequest;
+import lbms.plugins.mldht.kad.messages.PingResponse;
+import lbms.plugins.mldht.kad.tasks.AnnounceTask;
+import lbms.plugins.mldht.kad.tasks.NodeLookup;
+import lbms.plugins.mldht.kad.tasks.PeerLookupTask;
+import lbms.plugins.mldht.kad.tasks.PingRefreshTask;
+import lbms.plugins.mldht.kad.tasks.Task;
+import lbms.plugins.mldht.kad.tasks.TaskListener;
+import lbms.plugins.mldht.kad.tasks.TaskManager;
 import lbms.plugins.mldht.kad.utils.AddressUtils;
 import lbms.plugins.mldht.kad.utils.PopulationEstimator;
 import lbms.plugins.mldht.kad.utils.ThreadLocalUtils;
@@ -103,38 +132,80 @@ public class DHT implements DHTBase {
 		};
 	}
 	
-	private boolean							running;
-	private boolean							stopped;
+	private boolean						running;
+	private boolean						stopped;
 	
-	private long							server_create_counter;
-	private long							last_rpc_create;
+	private long						serverCreateCounter;
+	private long						lastRpcCreate;
 
-	private boolean							bootstrapping;
-	private long							lastBootstrap;
+	private boolean						bootstrapping;
+	private long						lastBootstrap;
 
-	private DHTConfiguration				config;
-	private Node							node;
-	private List<RPCServer>					servers = new CopyOnWriteArrayList<RPCServer>();
-	private Database						db;
-	private TaskManager						taskManager;
-	private File							tableFile;
-	private boolean							useRouterBootstrapping;
+	private DHTConfiguration			config;
+	private Node						node;
+	private List<RPCServer>				servers = new CopyOnWriteArrayList<RPCServer>();
+	private Database					db;
+	private TaskManager					taskManager;
+	private File						tableFile;
+	private boolean						useRouterBootstrapping;
 
-	private List<DHTStatsListener>			statsListeners;
-	private List<DHTStatusListener>			statusListeners;
-	private List<DHTIndexingListener>		indexingListeners;
-	private DHTStats						stats;
-	private DHTStatus						status;
-	private PopulationEstimator				estimator;
-	private AnnounceNodeCache				cache;
+	private List<DHTStatsListener>		statsListeners;
+	private List<DHTStatusListener>		statusListeners;
+	private List<DHTIndexingListener>	indexingListeners;
+	private DHTStats					stats;
+	private DHTStatus					status;
+	private PopulationEstimator			estimator;
+	private AnnounceNodeCache			cache;
 	
-	private RPCStats						serverStats;
+	private RPCStats					serverStats;
 
-	private final DHTtype					type;
-	private List<ScheduledFuture<?>>		scheduledActions = new ArrayList<ScheduledFuture<?>>();
+	private final DHTtype				type;
 	
 	static Map<DHTtype,DHT> dhts; 
 
+	private List<ScheduledFuture<?>>	scheduledActions = new ArrayList<ScheduledFuture<?>>();
+	RPCServerListener 					serverListener;
+	
+	//initialDelay=5000, period=DHTConstants.DHT_UPDATE_INTERVAL(1000)
+	//private Runnable statUpdateSchedule;
+	ScheduledFuture<?> statUpdateAction = null;
+	private boolean statUpdateScheduleActive = true;
+	private long statUpdateScheduleinitialDelay = 5000;
+	private long statUpdateSchedulePeriod = DHTConstants.DHT_UPDATE_INTERVAL;
+	
+	//initialDelay=5000, period=DHTConstants.DHT_UPDATE_INTERVAL(1000)
+	//private Runnable dhtUpdateSchedule;
+	ScheduledFuture<?> dhtUpdateAction = null;
+	private boolean dhtUpdateScheduleActive = false;
+	private long dhtUpdateScheduleinitialDelay = 5000;
+	private long dhtUpdateSchedulePeriod = DHTConstants.DHT_UPDATE_INTERVAL;
+	
+	//initialDelay=1000, period=DHTConstants.CHECK_FOR_EXPIRED_ENTRIES(300000=5min)
+	//Runnable expiredEntriesSchedule;
+	ScheduledFuture<?> expiredEntriesAction = null;
+	private boolean expiredEntriesScheduleActive = false;
+	private long expiredEntriesScheduleinitialDelay = 1000;
+	private long expiredEntriesSchedulePeriod = DHTConstants.CHECK_FOR_EXPIRED_ENTRIES;
+	
+	//initialDelay=DHTConstants.RANDOM_LOOKUP_INTERVAL(600000=10min), period=DHTConstants.RANDOM_LOOKUP_INTERVAL
+	//private Runnable lookupSchedule;
+	ScheduledFuture<?> lookupAction = null;
+	private boolean lookupScheduleActive = false;
+	private long lookupScheduleinitialDelay = DHTConstants.RANDOM_LOOKUP_INTERVAL;
+	private long lookupSchedulePeriod = DHTConstants.RANDOM_LOOKUP_INTERVAL;
+	
+	public boolean isDhtUpdateScheduleActive() {
+		return dhtUpdateScheduleActive;
+	}
+	
+	public boolean isExpiredEntriesScheduleActive() {
+		return expiredEntriesScheduleActive;
+	}
+	
+	public boolean isLookupScheduleActive() {
+		return lookupScheduleActive;
+	}
+	
 	public synchronized static Map<DHTtype, DHT> createDHTs() {
 		if (dhts == null) {
 			dhts = new EnumMap<DHTtype,DHT>(DHTtype.class);
@@ -296,13 +367,13 @@ public class DHT implements DHTBase {
 			return;
 		}
 
-		Log.d(TAG, "announce() is called...");
+		/*Log.d(TAG, "announce() is called...");
 		//Util.printRequest(TAG, r);
 		InetSocketAddress isa = r.getOrigin();
 		String hash = Util.toHexString(r.getTarget().getHash());
 		//if (hash.length() > 10)
 			//hash = hash.substring(0, 10)+"...";
-		Log.d(TAG, "addr="+isa+",hash="+hash);
+		Log.d(TAG, "addr="+isa+",hash="+hash);*/
 		
 		node.recieved(this, r);
 		// first check if the token is OK
@@ -328,12 +399,12 @@ public class DHT implements DHTBase {
 		r.getServer().sendMessage(rsp);
 	}
 
-	public void error (ErrorMessage r) {
+	public void error(ErrorMessage r) {
 		DHT.logError("Error [" + r.getCode() + "] from: " + r.getOrigin()
 				+ " Message: \"" + r.getMessage() + "\"");
 	}
 
-	public void timeout (RPCCallBase r) {
+	public void timeout(RPCCallBase r) {
 		if (isRunning()) {
 			node.onTimeout(r);
 		}
@@ -344,7 +415,7 @@ public class DHT implements DHTBase {
 	 * 
 	 * @see lbms.plugins.mldht.kad.DHTBase#addDHTNode(java.lang.String, int)
 	 */
-	public void addDHTNode (String host, int hport) {
+	public void addDHTNode(String host, int hport) {
 		if (!isRunning()) {
 			return;
 		}
@@ -402,7 +473,7 @@ public class DHT implements DHTBase {
 	
 	
 
-	public PingRefreshTask refreshBuckets (List<RoutingTableEntry> buckets,
+	public PingRefreshTask refreshBuckets(List<RoutingTableEntry> buckets,
 			boolean cleanOnTimeout) {
 		RPCServer server = getRandomServer();
 		if (server == null) {
@@ -469,14 +540,14 @@ public class DHT implements DHTBase {
 	 * 
 	 * @see lbms.plugins.mldht.kad.DHTBase#getStats()
 	 */
-	public DHTStats getStats () {
+	public DHTStats getStats() {
 		return stats;
 	}
 
 	/**
 	 * @return the status
 	 */
-	public DHTStatus getStatus () {
+	public DHTStatus getStatus() {
 		return status;
 	}
 
@@ -494,7 +565,7 @@ public class DHT implements DHTBase {
 	 * 
 	 * @see lbms.plugins.mldht.kad.DHTBase#portRecieved(java.lang.String, int)
 	 */
-	public void portRecieved (String ip, int port) {
+	public void portRecieved(String ip, int port) {
 		if (!isRunning()) {
 			return;
 		}
@@ -521,7 +592,7 @@ public class DHT implements DHTBase {
 	 * 
 	 * @see lbms.plugins.mldht.kad.DHTBase#start(java.lang.String, int)
 	 */
-	public void start(DHTConfiguration config, final RPCServerListener serverListener)
+	public void start(DHTConfiguration config, final RPCServerListener _serverListener)
 			throws SocketException {
 		
 		//Log.d(TAG, ">>> start() is called...");
@@ -533,7 +604,7 @@ public class DHT implements DHTBase {
 
 		this.config = config;
 		useRouterBootstrapping = !config.noRouterBootstrap();
-
+		
 		setStatus(DHTStatus.Initializing);
 		stats.resetStartedTimestamp();
 
@@ -544,7 +615,7 @@ public class DHT implements DHTBase {
 		resolveBootstrapAddresses();
 		
 		serverStats = new RPCStats();
-
+		
 		cache = new AnnounceNodeCache();
 		stats.setRpcStats(serverStats);
 		node = new Node(this);
@@ -552,6 +623,7 @@ public class DHT implements DHTBase {
 		stats.setDbStats(db.getStats());
 		taskManager = new TaskManager();
 		running = true;
+		serverListener = _serverListener;
 		
 		scheduledActions.add(scheduler.scheduleAtFixedRate(new Runnable() {
 			public void run() {
@@ -566,17 +638,18 @@ public class DHT implements DHTBase {
 				}
 			}
 		}, 5000, DHTConstants.DHT_UPDATE_INTERVAL, TimeUnit.MILLISECONDS));
-
+		
 		// initialize as many RPC servers as we need 
 		for (int i = 0;i< AddressUtils.getAvailableAddrs(config.allowMultiHoming(), type.PREFERRED_ADDRESS_TYPE).size();i++)
-			new RPCServer(this, getPort(),serverStats, serverListener);
+			new RPCServer(this, getPort(),serverStats, _serverListener);
 		
 		bootstrapping = true;
-		node.loadTable(new Runnable() {
+		
+		/*node.loadTable(new Runnable() {
 			public void run() {
-				started(serverListener);				
+				started(_serverListener);				
 			}
-		});
+		});*/
 
 //		// does 10k random lookups and prints them to a file for analysis
 //		scheduler.schedule(new Runnable() {
@@ -646,7 +719,8 @@ public class DHT implements DHTBase {
 			Task t = new KeyspaceCrawler(srv, node);
 			tman.addTask(t);
 		}*/
-			
+		
+		/*
 		scheduledActions.add(scheduler.scheduleAtFixedRate(new Runnable() {
 			public void run () {
 				try {
@@ -686,14 +760,105 @@ public class DHT implements DHTBase {
 				}
 			}
 		}, DHTConstants.RANDOM_LOOKUP_INTERVAL, DHTConstants.RANDOM_LOOKUP_INTERVAL, TimeUnit.MILLISECONDS));
+		//*/
 	}
-
+	
+	public void startDhtUpdateSchedule() {
+		
+		ScheduledFuture<?> action = dhtUpdateAction = scheduler.scheduleAtFixedRate(new Runnable() {
+			public void run () {
+				try {
+					update(serverListener);
+				} catch (Throwable e) {
+					log(e, LogLevel.Fatal);
+				}
+			}
+		}, 5000, DHTConstants.DHT_UPDATE_INTERVAL, TimeUnit.MILLISECONDS);
+		
+		scheduledActions.add(action);
+		
+		dhtUpdateScheduleActive = true;
+	}
+	
+	public void stopDhtUpdateSchedule() {
+		for (ScheduledFuture<?> future : scheduledActions)
+			if (future == statUpdateAction) future.cancel(false);
+		scheduler.getQueue().remove(dhtUpdateAction);
+		scheduledActions.remove(dhtUpdateAction);
+		
+		dhtUpdateScheduleActive = false;
+	}
+	
+	public void startExpiredEntriesSchedule() {
+		
+		ScheduledFuture<?> action = expiredEntriesAction = scheduler.scheduleAtFixedRate(new Runnable() {
+			public void run() {
+				try {
+					long now = System.currentTimeMillis();
+					db.expire(now);
+					cache.cleanup(now);					
+				} catch (Throwable e) {
+					log(e, LogLevel.Fatal);
+				}
+			}
+		}, 1000, DHTConstants.CHECK_FOR_EXPIRED_ENTRIES, TimeUnit.MILLISECONDS);
+		
+		scheduledActions.add(action);
+		
+		expiredEntriesScheduleActive = true;
+	}
+	
+	public void stopExpiredEntriesSchedule() {
+		for (ScheduledFuture<?> future : scheduledActions)
+			if (future == expiredEntriesAction) future.cancel(false);
+		scheduler.getQueue().remove(expiredEntriesAction);
+		scheduledActions.remove(expiredEntriesAction);
+		
+		expiredEntriesScheduleActive = false;
+	}
+	
+	public void startLookupSchedule() {
+		
+		ScheduledFuture<?> action = lookupAction = scheduler.scheduleAtFixedRate(new Runnable() {
+			public void run() {
+				try {
+					long now = System.currentTimeMillis();
+					db.expire(now);
+					cache.cleanup(now);					
+				} catch (Throwable e) {
+					log(e, LogLevel.Fatal);
+				}
+			}
+		}, 1000, DHTConstants.CHECK_FOR_EXPIRED_ENTRIES, TimeUnit.MILLISECONDS);
+		
+		scheduledActions.add(action);
+		
+		lookupScheduleActive = true;
+	}
+	
+	public void stopLookupSchedule() {
+		for (ScheduledFuture<?> future : scheduledActions)
+			if (future == lookupAction) future.cancel(false);
+		scheduler.getQueue().remove(lookupAction);
+		scheduledActions.remove(lookupAction);
+		
+		lookupScheduleActive = false;
+	}
+	
+	/*public void stopScheduler() {
+		for (ScheduledFuture<?> future : scheduledActions)
+			future.cancel(false);
+		scheduler.getQueue().removeAll(scheduledActions);
+		scheduler.shutdownNow();
+		scheduledActions.clear();
+	}*/
+	
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see lbms.plugins.mldht.kad.DHTBase#stop()
 	 */
-	public void stop () {
+	public void stop() {
 		if (!running) {
 			return;
 		}
@@ -713,13 +878,15 @@ public class DHT implements DHTBase {
 
 		for (RPCServer s : servers)
 			s.destroy();
-		try {
+		
+		/*try {
 			if (node != null) {
 				node.saveTable(tableFile,true);
 			}
 		} catch (Throwable e) {
 			e.printStackTrace();
-		}
+		}*/
+		
 		running = false;
 		
 		taskManager = null;
@@ -775,7 +942,7 @@ public class DHT implements DHTBase {
 				
 				int delay = 1000;
 				
-				for (int i = 0; i < server_create_counter; i++) {
+				for (int i = 0; i < serverCreateCounter; i++) {
 					delay = delay * 2;
 					if (delay > 60 * 1000) {
 						delay = 60 * 1000;
@@ -783,10 +950,10 @@ public class DHT implements DHTBase {
 					}
 				}
 				
-				if (last_rpc_create == 0 || monoNow - last_rpc_create >= delay) {
-					last_rpc_create = monoNow;
+				if (lastRpcCreate == 0 || monoNow - lastRpcCreate >= delay) {
+					lastRpcCreate = monoNow;
 					new RPCServer(this, getPort(),serverStats,serverListener);
-					server_create_counter++;
+					serverCreateCounter++;
 				} else {
 					return;
 				}
@@ -797,7 +964,7 @@ public class DHT implements DHTBase {
 			return;
 		}
 				
-		server_create_counter = 0;
+		serverCreateCounter = 0;
 		
 		long now = System.currentTimeMillis();
 
@@ -906,6 +1073,8 @@ public class DHT implements DHTBase {
 			return;
 		}
 		
+		//new Throwable().printStackTrace();
+		
 		if (useRouterBootstrapping || node.getNumEntriesInRoutingTable() > 1) {
 			
 			final AtomicInteger finishCount = new AtomicInteger();
@@ -917,7 +1086,7 @@ public class DHT implements DHTBase {
 				 * 
 				 * @see lbms.plugins.mldht.kad.TaskListener#finished(lbms.plugins.mldht.kad.Task)
 				 */
-				public void finished (Task t) {
+				public void finished(Task t) {
 					int count = finishCount.decrementAndGet();
 					bootstrapping = false;
 					if (count == 0 && running && node.getNumEntriesInRoutingTable() > DHTConstants.USE_BT_ROUTER_IF_LESS_THAN_X_PEERS) {
@@ -925,10 +1094,12 @@ public class DHT implements DHTBase {
 					}
 				}
 			};
-
+			
 			logInfo("Bootstrapping...");
 			lastBootstrap = System.currentTimeMillis();
-
+			
+			logInfo("servers.size() = " + servers.size());
+			
 			for (RPCServer srv : servers) {
 				finishCount.incrementAndGet();
 				NodeLookup nl = findNode(srv.getDerivedID(), true, true, true,srv);
@@ -969,7 +1140,7 @@ public class DHT implements DHTBase {
 		if (!running) {
 			return null;
 		}
-
+		
 		NodeLookup at = new NodeLookup(id, server, node, isBootstrap);
 		if (!queue && canStartTask(at)) {
 			at.start();
