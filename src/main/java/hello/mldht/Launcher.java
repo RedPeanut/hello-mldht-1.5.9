@@ -46,7 +46,7 @@ public class Launcher {
 		
 		// create dht
 		dhts = DHT.createDHTs();
-		DHT.setLogLevel(LogLevel.Debug);
+		DHT.setLogLevel(LogLevel.Verbose);
 		/*DHT.setLogger(new DHTLogger() {
 			public void log(String message) {
 				System.out.println(message);

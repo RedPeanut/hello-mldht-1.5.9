@@ -958,7 +958,7 @@ public class DHT implements DHTBase {
 	// can't understand it myself (parg) as the code appears to limit resolves to once per 4 mins and
 	// only then for poorly integrated nodes, and there ain't that many mldht plugins out there
 	
-	private static final Map<String,Object[]> bn_resolver_history = new HashMap<String, Object[]>();
+	private static final Map<String,Object[]> bnResolverHistory = new HashMap<String, Object[]>();
 	
 	private void resolveBootstrapAddresses() {
 		List<InetSocketAddress> nodeAddresses =  new ArrayList<InetSocketAddress>();
@@ -966,29 +966,29 @@ public class DHT implements DHTBase {
 			String 	hostname 	= DHTConstants.BOOTSTRAP_NODES[i];
 			int 	port 		= DHTConstants.BOOTSTRAP_PORTS[i];
 
-			String		cache_key = hostname + ":" + port;
+			String		cacheKey = hostname + ":" + port;
 			Object[]	cache;
 			
-			synchronized(bn_resolver_history) {
-				cache = bn_resolver_history.get(cache_key);
+			synchronized(bnResolverHistory) {
+				cache = bnResolverHistory.get(cacheKey);
 			}
 			
 			long	now = SystemTime.getMonotonousTime();
 			
 			if (cache != null) {
 				
-				long last_lookup 	= (Long)cache[0];
-				long consec_fails 	= (Long)cache[1]; 
+				long lastLookup 	= (Long)cache[0];
+				long consecFails 	= (Long)cache[1]; 
 				
-				InetAddress[] last_result = (InetAddress[]) cache[2];
+				InetAddress[] lastResult = (InetAddress[]) cache[2];
 				
-				if (consec_fails > 0) {
+				if (consecFails > 0) {
 					
-					long	next_lookup = last_lookup + Math.min(2*60*60*1000, 5*60*1000L << (consec_fails -1));
+					long	nextLookup = lastLookup + Math.min(2*60*60*1000, 5*60*1000L << (consecFails -1));
 					
-					if (next_lookup > now) {
-						if (last_result != null) {
-							for (InetAddress addr : last_result) {
+					if (nextLookup > now) {
+						if (lastResult != null) {
+							for (InetAddress addr : lastResult) {
 								nodeAddresses.add(new InetSocketAddress(addr, port));
 							}
 						}	
@@ -1011,8 +1011,8 @@ public class DHT implements DHTBase {
 				cache[1] = ((Long)cache[1]) + 1;
 			}
 			
-			synchronized(bn_resolver_history) {
-				bn_resolver_history.put(cache_key, cache);
+			synchronized(bnResolverHistory) {
+				bnResolverHistory.put(cacheKey, cache);
 			}
 		}
 		

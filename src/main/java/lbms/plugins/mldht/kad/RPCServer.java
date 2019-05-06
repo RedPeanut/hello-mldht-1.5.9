@@ -36,6 +36,7 @@ import gudy.azureus2.core3.util.BDecoder;
 import hello.util.Log;
 import hello.util.SingleCounter0;
 import hello.util.SingleCounter9;
+import hello.util.Util;
 import lbms.plugins.mldht.kad.DHT.LogLevel;
 import lbms.plugins.mldht.kad.messages.MessageBase;
 import lbms.plugins.mldht.kad.messages.MessageBase.Method;
@@ -484,6 +485,18 @@ public class RPCServer implements Runnable, RPCServerBase {
 					throw e;
 				}
 			}
+			
+			if (DHT.isLogLevelEnabled(LogLevel.Verbose)) {
+				
+				DHT.logVerbose(Util.toHexString(p.getData(), 0, p.getLength()));
+				
+				try {
+					DHT.logVerbose(new String(p.getData(), 0, p.getLength(), "UTF-8"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			
 			stats.addSentBytes(msg.length + dht.getType().HEADER_LENGTH);
 			numSent++;
 		}

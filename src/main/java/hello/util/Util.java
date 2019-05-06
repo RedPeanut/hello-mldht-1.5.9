@@ -34,6 +34,12 @@ public class Util {
 		return new String(chars);
 	}
 
+	public static String toHexString(byte[] bytes, int offset, int length) {
+		byte[] b = new byte[length];
+		System.arraycopy(bytes, offset, b, 0, length);
+		return toHexString(b);
+	}
+	
 	public static String INDENT = "    ";
 	
 	public static <K, V> void printMap(String key, Map<K, V> map, String indent) {
