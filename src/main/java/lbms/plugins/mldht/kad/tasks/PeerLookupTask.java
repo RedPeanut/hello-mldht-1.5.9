@@ -50,7 +50,7 @@ public class PeerLookupTask extends Task {
 	private SortedSet<KBucketEntryAndToken>	closestSet;
 	
 	private int								validResponsesSinceLastClosestSetModification;
-	AnnounceNodeCache						cache;
+	protected AnnounceNodeCache				cache;
 
 
 	public PeerLookupTask(RPCServerBase rpc, Node node, Key infoHash) {
@@ -124,8 +124,7 @@ public class PeerLookupTask extends Task {
 					}
 				}
 
-			} else
-			{
+			} else {
 				for (int i = 0; i < nval; i++) {
 					KBucketEntry e = PackUtil.UnpackBucketEntry(nodes, i * type.NODES_ENTRY_LENGTH, type);
 					DHT.getDHT(type).addDHTNode(e.getAddress().getAddress().getHostAddress(), e.getAddress().getPort());

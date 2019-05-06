@@ -73,7 +73,7 @@ public class TaskManager {
 	 * Remove all finished tasks.
 	 * @param dhtTable Needed to ask permission to start a task
 	 */
-	public void removeFinishedTasks (DHTBase dhtTable) {
+	public void removeFinishedTasks(DHTBase dhtTable) {
 		synchronized (tasks) {
 
 			List<Integer> rm = new ArrayList<Integer>(tasks.size());

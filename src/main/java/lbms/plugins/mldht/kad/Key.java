@@ -169,7 +169,6 @@ public class Key implements Comparable<Key>, Serializable {
 		for (int i=0;i<32;i++)
 			if (((0x01 << i) & idx) != 0)
 				data[i/8] ^= 0x80 >> (i % 8);
-		
 		return k;
 	}
 

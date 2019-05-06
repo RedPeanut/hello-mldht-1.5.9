@@ -39,12 +39,12 @@ public interface DHTBase {
 	/**
 	 * Start the DHT
 	 */
-	void start (DHTConfiguration config, RPCServerListener serverListener) throws SocketException;
+	void start(DHTConfiguration config, RPCServerListener serverListener) throws SocketException;
 
 	/**
 	 * Stop the DHT
 	 */
-	void stop ();
+	void stop();
 
 	/**
 	 * Update the DHT
@@ -74,53 +74,36 @@ public interface DHTBase {
 	/**
 	 * See if the DHT is running.
 	 */
-	boolean isRunning ();
+	boolean isRunning();
 
 	/// Get statistics about the DHT
-	DHTStats getStats ();
+	DHTStats getStats();
 
 	/**
 	 * Add a DHT node. This node shall be pinged immediately.
 	 * @param host The hostname or ip
 	 * @param hport The port of the host
 	 */
-	void addDHTNode (String host, int hport);
+	void addDHTNode(String host, int hport);
 
-	//void started ();
+	//void started();
+	//void stopped();
 
-	//void stopped ();
-
-	public void ping (PingRequest r);
-
-	public void findNode (FindNodeRequest r);
-
-	public void response (MessageBase r);
-
-	public void getPeers (GetPeersRequest r);
-
-	public void announce (AnnounceRequest r);
-
-	public void error (ErrorMessage r);
-
-	public void timeout (RPCCallBase r);
-
-	public void addStatsListener (DHTStatsListener listener);
-
-	public void removeStatsListener (DHTStatsListener listener);
-
-	public Node getNode ();
-
-	public TaskManager getTaskManager ();
-
-	boolean canStartTask (Task toCheck);
-
-	NodeLookup findNode (Key id);
-
-	PingRefreshTask refreshBucket (KBucket bucket);
-
-	public PingRefreshTask refreshBuckets (List<RoutingTableEntry> buckets, boolean cleanOnTimeout);
-
-	NodeLookup fillBucket (Key id, KBucket bucket);
-
-	Key getOurID ();
+	public void ping(PingRequest r);
+	public void findNode(FindNodeRequest r);
+	public void response(MessageBase r);
+	public void getPeers(GetPeersRequest r);
+	public void announce(AnnounceRequest r);
+	public void error(ErrorMessage r);
+	public void timeout(RPCCallBase r);
+	public void addStatsListener(DHTStatsListener listener);
+	public void removeStatsListener(DHTStatsListener listener);
+	public Node getNode();
+	public TaskManager getTaskManager();
+	boolean canStartTask(Task toCheck);
+	NodeLookupTask findNode(Key id);
+	PingRefreshTask refreshBucket(KBucket bucket);
+	public PingRefreshTask refreshBuckets(List<RoutingTableEntry> buckets, boolean cleanOnTimeout);
+	NodeLookupTask fillBucket(Key id, KBucket bucket);
+	Key getOurID();
 }

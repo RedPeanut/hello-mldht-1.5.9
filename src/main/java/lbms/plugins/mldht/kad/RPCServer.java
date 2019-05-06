@@ -245,7 +245,7 @@ public class RPCServer implements Runnable, RPCServerBase {
 	/* (non-Javadoc)
 	 * @see lbms.plugins.mldht.kad.RPCServerBase#stop()
 	 */
-	public void destroy () {
+	public void destroy() {
 		if (running)
 			DHT.logInfo("Stopping RPC Server");
 		running = false;
@@ -314,7 +314,7 @@ public class RPCServer implements Runnable, RPCServerBase {
 	/* (non-Javadoc)
 	 * @see lbms.plugins.mldht.kad.RPCServerBase#ping(lbms.plugins.mldht.kad.Key, java.net.InetSocketAddress)
 	 */
-	public void ping (InetSocketAddress addr) {
+	public void ping(InetSocketAddress addr) {
 		PingRequest pr = new PingRequest();
 		pr.setID(derivedId);
 		pr.setDestination(addr);
@@ -324,7 +324,7 @@ public class RPCServer implements Runnable, RPCServerBase {
 	/* (non-Javadoc)
 	 * @see lbms.plugins.mldht.kad.RPCServerBase#findCall(byte)
 	 */
-	public RPCCallBase findCall (byte[] mtid) {
+	public RPCCallBase findCall(byte[] mtid) {
 		return calls.get(new ByteWrapper(mtid));
 	}
 
@@ -332,28 +332,28 @@ public class RPCServer implements Runnable, RPCServerBase {
 	/* (non-Javadoc)
 	 * @see lbms.plugins.mldht.kad.RPCServerBase#getNumActiveRPCCalls()
 	 */
-	public int getNumActiveRPCCalls () {
+	public int getNumActiveRPCCalls() {
 		return calls.size();
 	}
 
 	/**
 	 * @return the numReceived
 	 */
-	public int getNumReceived () {
+	public int getNumReceived() {
 		return numReceived;
 	}
 
 	/**
 	 * @return the numSent
 	 */
-	public int getNumSent () {
+	public int getNumSent() {
 		return numSent;
 	}
 
 	/* (non-Javadoc)
 	 * @see lbms.plugins.mldht.kad.RPCServerBase#getStats()
 	 */
-	public RPCStats getStats () {
+	public RPCStats getStats() {
 		return stats;
 	}
 	
@@ -489,7 +489,7 @@ public class RPCServer implements Runnable, RPCServerBase {
 		}
 	}
 
-	private void doQueuedCalls () {
+	private void doQueuedCalls() {
 		while (callQueue.peek() != null && calls.size() < DHTConstants.MAX_ACTIVE_CALLS) {
 			RPCCallBase c;
 

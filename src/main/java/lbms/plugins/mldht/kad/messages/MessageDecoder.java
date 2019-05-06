@@ -31,7 +31,7 @@ import lbms.plugins.mldht.kad.utils.Token;
  */
 public class MessageDecoder {
 
-	public static MessageBase parseMessage (Map<String, Object> map,
+	public static MessageBase parseMessage(Map<String, Object> map,
 			RPCServerBase srv) {
 
 		try {
@@ -206,14 +206,14 @@ public class MessageDecoder {
 	 * @param map
 	 * @return
 	 */
-	private static MessageBase parseRequest (Map<String, Object> map, RPCServerBase srv) {
+	private static MessageBase parseRequest(Map<String, Object> map, RPCServerBase srv) {
 		Object rawRequestMethod = map.get(Type.REQ_MSG.getRPCTypeName());
 		Map<String, Object> args = (Map<String, Object>) map.get(Type.REQ_MSG.innerKey());
 		
 		if (rawRequestMethod == null || args == null)
 			return null;
-
-		byte[] mtid = (byte[])map.get(MessageBase.TRANSACTION_KEY);
+		
+		byte[] mtid = (byte[]) map.get(MessageBase.TRANSACTION_KEY);
 		byte[] hash = (byte[]) args.get("id");
 		
 		if (mtid == null || mtid.length < 1 || hash == null || hash.length != Key.SHA1_HASH_LENGTH)
@@ -262,7 +262,7 @@ public class MessageDecoder {
 		} else {
 			DHT.logDebug("Received unknown Message Type: " + requestMethod);
 		}
-
+		
 		if (msg != null) {
 			msg.setMTID(mtid);
 			msg.setID(id);

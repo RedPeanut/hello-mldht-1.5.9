@@ -140,7 +140,7 @@ public abstract class Task implements RPCCallListener {
 	/**
 	 *  Start the task, to be used when a task is queued.
 	 */
-	public void start () {
+	public void start() {
 		if (queued) {
 			DHT.logDebug("Starting Task: " + this.getClass().getSimpleName()
 					+ " TaskID:" + taskID);
@@ -186,14 +186,14 @@ public abstract class Task implements RPCCallListener {
 
 	/**
 	 * Do a call to the rpc server, increments the outstandingRequests variable.
-	 * @param req THe request to send
+	 * @param req The request to send
 	 * @return true if call was made, false if not
 	 */
 	boolean rpcCall(MessageBase req, Key expectedID) {
 		if (!canDoRequest()) {
 			return false;
 		}
-
+		
 		RPCCallBase c = rpc.doCall(req);
 		c.setExpectedID(expectedID);
 		c.addListener(this);

@@ -123,7 +123,7 @@ public class KClosestNodesSearch {
 	 *
 	 * @return the encoded results.
 	 */
-	public byte[] pack () {
+	public byte[] pack() {
 		if (entries.size() == 0)
 			return null;
 		int entryLength = owner.getType().NODES_ENTRY_LENGTH;

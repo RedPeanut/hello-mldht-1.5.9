@@ -53,7 +53,7 @@ import lbms.plugins.mldht.kad.messages.MessageBase;
 import lbms.plugins.mldht.kad.messages.PingRequest;
 import lbms.plugins.mldht.kad.messages.PingResponse;
 import lbms.plugins.mldht.kad.tasks.AnnounceTask;
-import lbms.plugins.mldht.kad.tasks.NodeLookup;
+import lbms.plugins.mldht.kad.tasks.NodeLookupTask;
 import lbms.plugins.mldht.kad.tasks.PeerLookupTask;
 import lbms.plugins.mldht.kad.tasks.PingRefreshTask;
 import lbms.plugins.mldht.kad.tasks.Task;
@@ -170,29 +170,21 @@ public class DHT implements DHTBase {
 	//private Runnable statUpdateSchedule;
 	ScheduledFuture<?> statUpdateAction = null;
 	private boolean statUpdateScheduleActive = true;
-	private long statUpdateScheduleinitialDelay = 5000;
-	private long statUpdateSchedulePeriod = DHTConstants.DHT_UPDATE_INTERVAL;
 	
 	//initialDelay=5000, period=DHTConstants.DHT_UPDATE_INTERVAL(1000)
 	//private Runnable dhtUpdateSchedule;
 	ScheduledFuture<?> dhtUpdateAction = null;
 	private boolean dhtUpdateScheduleActive = false;
-	private long dhtUpdateScheduleinitialDelay = 5000;
-	private long dhtUpdateSchedulePeriod = DHTConstants.DHT_UPDATE_INTERVAL;
 	
 	//initialDelay=1000, period=DHTConstants.CHECK_FOR_EXPIRED_ENTRIES(300000=5min)
 	//Runnable expiredEntriesSchedule;
 	ScheduledFuture<?> expiredEntriesAction = null;
 	private boolean expiredEntriesScheduleActive = false;
-	private long expiredEntriesScheduleinitialDelay = 1000;
-	private long expiredEntriesSchedulePeriod = DHTConstants.CHECK_FOR_EXPIRED_ENTRIES;
 	
 	//initialDelay=DHTConstants.RANDOM_LOOKUP_INTERVAL(600000=10min), period=DHTConstants.RANDOM_LOOKUP_INTERVAL
 	//private Runnable lookupSchedule;
 	ScheduledFuture<?> lookupAction = null;
 	private boolean lookupScheduleActive = false;
-	private long lookupScheduleinitialDelay = DHTConstants.RANDOM_LOOKUP_INTERVAL;
-	private long lookupSchedulePeriod = DHTConstants.RANDOM_LOOKUP_INTERVAL;
 	
 	public boolean isDhtUpdateScheduleActive() {
 		return dhtUpdateScheduleActive;
@@ -645,11 +637,11 @@ public class DHT implements DHTBase {
 		
 		bootstrapping = true;
 		
-		/*node.loadTable(new Runnable() {
+		node.loadTable(new Runnable() {
 			public void run() {
 				started(_serverListener);				
 			}
-		});*/
+		});
 
 //		// does 10k random lookups and prints them to a file for analysis
 //		scheduler.schedule(new Runnable() {
@@ -720,46 +712,15 @@ public class DHT implements DHTBase {
 			tman.addTask(t);
 		}*/
 		
-		/*
-		scheduledActions.add(scheduler.scheduleAtFixedRate(new Runnable() {
-			public void run () {
-				try {
-					update(serverListener);
-				} catch (Throwable e) {
-					log(e, LogLevel.Fatal);
-				}
-			}
-		}, 5000, DHTConstants.DHT_UPDATE_INTERVAL, TimeUnit.MILLISECONDS));
+		///*
+		if (dhtUpdateScheduleActive)
+			startDhtUpdateSchedule();
 		
-		scheduledActions.add(scheduler.scheduleAtFixedRate(new Runnable() {
-			public void run() {
-				try {
-					long now = System.currentTimeMillis();
-					db.expire(now);
-					cache.cleanup(now);					
-				} catch (Throwable e) {
-					log(e, LogLevel.Fatal);
-				}
-			}
-		}, 1000, DHTConstants.CHECK_FOR_EXPIRED_ENTRIES, TimeUnit.MILLISECONDS));
+		if (expiredEntriesScheduleActive)
+			startExpiredEntriesSchedule();
 		
-		scheduledActions.add(scheduler.scheduleAtFixedRate(new Runnable() {
-			public void run () {
-				try {
-					for (RPCServer srv : servers)
-						findNode(Key.createRandomKey(), false, false, true, srv).setInfo("Random Refresh Lookup");
-				} catch (Throwable e) {
-					log(e, LogLevel.Fatal);
-				}
-				
-				try {
-					if (!node.isInSurvivalMode())
-						node.saveTable(tableFile,false);
-				} catch (Throwable e) {
-					e.printStackTrace();
-				}
-			}
-		}, DHTConstants.RANDOM_LOOKUP_INTERVAL, DHTConstants.RANDOM_LOOKUP_INTERVAL, TimeUnit.MILLISECONDS));
+		if (lookupScheduleActive)
+			startLookupSchedule();
 		//*/
 	}
 	
@@ -782,7 +743,7 @@ public class DHT implements DHTBase {
 	
 	public void stopDhtUpdateSchedule() {
 		for (ScheduledFuture<?> future : scheduledActions)
-			if (future == statUpdateAction) future.cancel(false);
+			if (future == dhtUpdateAction) future.cancel(false);
 		scheduler.getQueue().remove(dhtUpdateAction);
 		scheduledActions.remove(dhtUpdateAction);
 		
@@ -879,13 +840,13 @@ public class DHT implements DHTBase {
 		for (RPCServer s : servers)
 			s.destroy();
 		
-		/*try {
+		try {
 			if (node != null) {
 				node.saveTable(tableFile,true);
 			}
 		} catch (Throwable e) {
 			e.printStackTrace();
-		}*/
+		}
 		
 		running = false;
 		
@@ -1102,7 +1063,7 @@ public class DHT implements DHTBase {
 			
 			for (RPCServer srv : servers) {
 				finishCount.incrementAndGet();
-				NodeLookup nl = findNode(srv.getDerivedID(), true, true, true,srv);
+				NodeLookupTask nl = findNode(srv.getDerivedID(), true, true, true,srv);
 				if (nl == null) {
 					bootstrapping = false;
 					break;
@@ -1134,14 +1095,14 @@ public class DHT implements DHTBase {
 		}
 	}
 
-	private NodeLookup findNode(Key id, boolean isBootstrap,
+	private NodeLookupTask findNode(Key id, boolean isBootstrap,
 			boolean isPriority, boolean queue, RPCServer server) {
 		
 		if (!running) {
 			return null;
 		}
 		
-		NodeLookup at = new NodeLookup(id, server, node, isBootstrap);
+		NodeLookupTask at = new NodeLookupTask(id, server, node, isBootstrap);
 		if (!queue && canStartTask(at)) {
 			at.start();
 		}
@@ -1154,7 +1115,7 @@ public class DHT implements DHTBase {
 	 * 
 	 * @param id The id of the key to search
 	 */
-	public NodeLookup findNode(Key id) {
+	public NodeLookupTask findNode(Key id) {
 		
 		// request
 		
@@ -1173,7 +1134,7 @@ public class DHT implements DHTBase {
 	 * 
 	 * @see lbms.plugins.mldht.kad.DHTBase#fillBucket(lbms.plugins.mldht.kad.KBucket)
 	 */
-	public NodeLookup fillBucket(Key id, KBucket bucket) {
+	public NodeLookupTask fillBucket(Key id, KBucket bucket) {
 		RPCServer server = getRandomServer();
 		if (server == null) {
 			return(null);
@@ -1210,7 +1171,7 @@ public class DHT implements DHTBase {
 		srv.sendMessage(errMsg);
 	}
 
-	public boolean canStartTask (Task toCheck) {
+	public boolean canStartTask(Task toCheck) {
 		// we can start a task if we have less then  7 runnning and
 		// there are at least 16 RPC slots available
 		return taskManager.getNumTasks() < DHTConstants.MAX_ACTIVE_TASKS * servers.size() && toCheck.getRPC().getNumActiveRPCCalls() + 16 < DHTConstants.MAX_ACTIVE_CALLS;

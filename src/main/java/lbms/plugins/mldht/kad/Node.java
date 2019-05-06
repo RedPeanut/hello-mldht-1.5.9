@@ -28,7 +28,7 @@ import hello.util.Util;
 import lbms.plugins.mldht.DHTConfiguration;
 import lbms.plugins.mldht.kad.messages.MessageBase;
 import lbms.plugins.mldht.kad.messages.MessageBase.Type;
-import lbms.plugins.mldht.kad.tasks.NodeLookup;
+import lbms.plugins.mldht.kad.tasks.NodeLookupTask;
 import lbms.plugins.mldht.kad.tasks.PingRefreshTask;
 import lbms.plugins.mldht.kad.tasks.Task;
 import lbms.plugins.mldht.kad.tasks.TaskListener;
@@ -432,7 +432,7 @@ public class Node {
 			if (entry.bucket.getNumEntries() < DHTConstants.MAX_ENTRIES_PER_BUCKET) {
 				DHT.logDebug("Filling Bucket: " + entry.prefix);
 
-				NodeLookup nl = control.fillBucket(entry.prefix.createRandomKeyFromPrefix(), entry.bucket);
+				NodeLookupTask nl = control.fillBucket(entry.prefix.createRandomKeyFromPrefix(), entry.bucket);
 				if (nl != null) {
 					entry.bucket.setRefreshTask(nl);
 					nl.setInfo("Filling Bucket #" + entry.prefix);

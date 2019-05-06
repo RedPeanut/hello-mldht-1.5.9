@@ -36,14 +36,14 @@ import lbms.plugins.mldht.kad.utils.PackUtil;
  * @author Damokles
  *
  */
-public class NodeLookup extends Task {
+public class NodeLookupTask extends Task {
 	
 	private int						validReponsesSinceLastClosestSetModification;
 	SortedSet<Key>					closestSet;
 	private Map<MessageBase, Key>	lookupMap;
 	private boolean forBootstrap = false;
 	
-	public NodeLookup(Key nodeId, RPCServerBase rpc, Node node, boolean isBootstrap) {
+	public NodeLookupTask(Key nodeId, RPCServerBase rpc, Node node, boolean isBootstrap) {
 		super(nodeId, rpc, node);
 		forBootstrap = isBootstrap;
 		this.closestSet = new TreeSet<Key>(new Key.DistanceOrder(targetKey));
@@ -85,7 +85,8 @@ public class NodeLookup extends Task {
 	}
 
 	@Override
-	void callFinished (RPCCallBase c, MessageBase rsp) {
+	void callFinished(RPCCallBase c, MessageBase rsp) {
+		
 		if (isFinished()) {
 			return;
 		}
@@ -130,8 +131,7 @@ public class NodeLookup extends Task {
 							}
 						}
 					}
-				} else
-				{
+				} else {
 					for (int i = 0; i < nval; i++) {
 						KBucketEntry e = PackUtil.UnpackBucketEntry(nodes, i * type.NODES_ENTRY_LENGTH, type);
 						DHT.getDHT(type).addDHTNode(e.getAddress().getAddress().getHostAddress(), e.getAddress().getPort());
@@ -144,7 +144,7 @@ public class NodeLookup extends Task {
 	}
 
 	@Override
-	void callTimeout (RPCCallBase c) {
+	void callTimeout(RPCCallBase c) {
 
 	}
 
@@ -152,8 +152,7 @@ public class NodeLookup extends Task {
 	 * @see lbms.plugins.mldht.kad.Task#start()
 	 */
 	@Override
-	public
-	void start () {
+	public void start() {
 		int added = 0;
 
 		// if we're bootstrapping start from the bucket that has the greatest possible distance from ourselves so we discover new things along the (longer) path
@@ -164,7 +163,6 @@ public class NodeLookup extends Task {
 		kns.fill();
 		todo.addAll(kns.getEntries());
 		
-
 		super.start();
 	}
 
