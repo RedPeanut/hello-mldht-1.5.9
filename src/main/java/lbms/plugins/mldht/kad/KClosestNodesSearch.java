@@ -31,9 +31,9 @@ public class KClosestNodesSearch {
 	
 	private Key							targetKey;
 	private List<KBucketEntry>			entries;
-	private int							max_entries;
+	private int							maxEntries;
 	private DHT							owner;
-	private Comparator<KBucketEntry> comp;
+	private Comparator<KBucketEntry> 	comp;
 
 	/**
 	 * Constructor sets the key to compare with
@@ -44,7 +44,7 @@ public class KClosestNodesSearch {
 	public KClosestNodesSearch(Key key, int maxEntries, DHT owner) {
 		this.targetKey = key;
 		this.owner = owner;
-		this.max_entries = maxEntries;
+		this.maxEntries = maxEntries;
 		this.comp = new KBucketEntry.DistanceOrder(key);
 		entries = new ArrayList<KBucketEntry>(maxEntries + DHTConstants.MAX_ENTRIES_PER_BUCKET);
 	}
@@ -80,7 +80,7 @@ public class KClosestNodesSearch {
 				entries.add(e);
 		}
 		Collections.sort(entries,comp);
-		for (int i=entries.size()-1;i>=max_entries;i--)
+		for (int i=entries.size()-1;i>=maxEntries;i--)
 			entries.remove(i);
 		if (entries.size() > 0 && farthest == entries.get(entries.size()-1).getID())
 			return true;
@@ -105,7 +105,7 @@ public class KClosestNodesSearch {
 			
 			if ( 	srv != null &&
 					srv.getPublicAddress() != null && 
-					entries.size() < max_entries) {
+					entries.size() < maxEntries) {
 			
 				InetSocketAddress sockAddr = new InetSocketAddress(srv.getPublicAddress(), srv.getPort());
 				entries.add(new KBucketEntry(sockAddr, srv.getDerivedID()));
@@ -113,8 +113,8 @@ public class KClosestNodesSearch {
 		}
 	}
 
-	public boolean isFull () {
-		return entries.size() >= max_entries;
+	public boolean isFull() {
+		return entries.size() >= maxEntries;
 	}
 
 	

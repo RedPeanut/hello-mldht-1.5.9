@@ -49,7 +49,7 @@ public class PeerLookupTask extends Task {
 	private Set<PeerAddressDBItem>			returnedItems;
 	private SortedSet<KBucketEntryAndToken>	closestSet;
 	
-	private int								validReponsesSinceLastClosestSetModification;
+	private int								validResponsesSinceLastClosestSetModification;
 	AnnounceNodeCache						cache;
 
 
@@ -184,10 +184,9 @@ public class PeerLookupTask extends Task {
 					KBucketEntryAndToken last = closestSet.last();
 					closestSet.remove(last);
 					if (toAdd == last) {
-						validReponsesSinceLastClosestSetModification++;
-					} else
-					{
-						validReponsesSinceLastClosestSetModification = 0;
+						validResponsesSinceLastClosestSetModification++;
+					} else {
+						validResponsesSinceLastClosestSetModification = 0;
 					}
 				}
 			}
@@ -219,7 +218,7 @@ public class PeerLookupTask extends Task {
 			
 			// go over the todo list and send get_peers requests
 			// until we have nothing left
-			while (!todo.isEmpty() && canDoRequest() && validReponsesSinceLastClosestSetModification < DHTConstants.MAX_CONCURRENT_REQUESTS) {
+			while (!todo.isEmpty() && canDoRequest() && validResponsesSinceLastClosestSetModification < DHTConstants.MAX_CONCURRENT_REQUESTS) {
 				KBucketEntry e = todo.first();
 				todo.remove(e);
 				// only send a findNode if we haven't already visited the node
@@ -241,7 +240,7 @@ public class PeerLookupTask extends Task {
 		
 		if (todo.isEmpty() && waitingFor == 0 && !isFinished()) {
 			done();
-		} else if (waitingFor == 0 && validReponsesSinceLastClosestSetModification >= DHTConstants.MAX_CONCURRENT_REQUESTS) {	// found all closest nodes, we're done
+		} else if (waitingFor == 0 && validResponsesSinceLastClosestSetModification >= DHTConstants.MAX_CONCURRENT_REQUESTS) {	// found all closest nodes, we're done
 			done();
 		}
 	}
@@ -251,7 +250,7 @@ public class PeerLookupTask extends Task {
 		super.done();
 	
 		// feed the estimator if we have usable results
-		if (validReponsesSinceLastClosestSetModification >= DHTConstants.MAX_CONCURRENT_REQUESTS)
+		if (validResponsesSinceLastClosestSetModification >= DHTConstants.MAX_CONCURRENT_REQUESTS)
 			synchronized (closestSet) {
 				SortedSet<Key> toEstimate = new TreeSet<Key>();
 				for (KBucketEntryAndToken e : closestSet)

@@ -122,7 +122,7 @@ public class KBucketEntry implements Serializable {
 	 * Constructor, sets everything to 0.
 	 * @return
 	 */
-	public KBucketEntry () {
+	public KBucketEntry() {
 		lastSeen = System.currentTimeMillis();
 		timeCreated = lastSeen;
 	}
@@ -157,7 +157,7 @@ public class KBucketEntry implements Serializable {
 	 * @param other KBucketEntry to copy
 	 * @return
 	 */
-	public KBucketEntry (KBucketEntry other) {
+	public KBucketEntry(KBucketEntry other) {
 		addr = other.addr;
 		nodeID = other.nodeID;
 		lastSeen = other.lastSeen;
@@ -168,7 +168,7 @@ public class KBucketEntry implements Serializable {
 	/**
 	 * @return the address of the node
 	 */
-	public InetSocketAddress getAddress () {
+	public InetSocketAddress getAddress() {
 		return addr;
 	}
 	
@@ -181,7 +181,7 @@ public class KBucketEntry implements Serializable {
 	/**
 	 * violating the equals contract (specifically: the transitivity requirement) here, use with care
 	 */
-	public boolean equals (KBucketEntry other) {
+	public boolean equals(KBucketEntry other) {
 		return nodeID.equals(other.nodeID) || addr.getAddress().equals(other.addr.getAddress());
 	}
 

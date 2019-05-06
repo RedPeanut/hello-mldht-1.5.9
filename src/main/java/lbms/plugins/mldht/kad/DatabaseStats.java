@@ -21,6 +21,7 @@ package lbms.plugins.mldht.kad;
  *
  */
 public class DatabaseStats {
+	
 	private int	keyCount;
 	private int	itemCount;
 

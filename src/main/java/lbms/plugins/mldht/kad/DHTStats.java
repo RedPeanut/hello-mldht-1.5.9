@@ -23,20 +23,18 @@ package lbms.plugins.mldht.kad;
 public class DHTStats {
 
 	private DatabaseStats	dbStats;
-
 	private RPCStats		rpcStats;
 
 	private long			startedTimestamp;
 
 	/// number of peers in the routing table
 	private int				numPeers;
+	
 	/// Number of running tasks
 	private int				numTasks;
 
 	private int				numReceivedPackets;
-
 	private int				numSentPackets;
-
 	private int				numRpcCalls;
 
 	/**

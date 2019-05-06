@@ -46,34 +46,36 @@ public class AddressUtils {
 			}
 			
 			for (InetAddress inetAddress : allBindAddresses) {
-				try {{
-						if (type == Inet6Address.class && inetAddress instanceof Inet6Address) {
-							Inet6Address addr = (Inet6Address) inetAddress;
-							// only accept globally reachable IPv6 unicast addresses
-							if (addr.isIPv4CompatibleAddress() || !isGlobalUnicast(addr))
-								continue;
-		
-							byte[] raw = addr.getAddress();
-							// prefer other addresses over teredo
-							if (raw[0] == 0x20 && raw[1] == 0x01 && raw[2] == 0x00 && raw[3] == 0x00)
-								addrs.addLast(addr);
-							else
-								addrs.addFirst(addr);
-						}
-						
-						if (type == Inet4Address.class && inetAddress instanceof Inet4Address) {
-							Inet4Address addr = (Inet4Address) inetAddress;
+				
+				try {
+				
+					if (type == Inet6Address.class && inetAddress instanceof Inet6Address) {
+						Inet6Address addr = (Inet6Address) inetAddress;
+						// only accept globally reachable IPv6 unicast addresses
+						if (addr.isIPv4CompatibleAddress() || !isGlobalUnicast(addr))
+							continue;
 	
-							// with multihoming we only accept globals
-							if (multiHoming && !isGlobalUnicast(addr))
-								continue;
-							// without multihoming we'll accept site-local addresses too, since they could be NATed
-							if (addr.isLinkLocalAddress() || addr.isLoopbackAddress())
-								continue;
-							
-							addrs.add(addr);
-						}
+						byte[] raw = addr.getAddress();
+						// prefer other addresses over teredo
+						if (raw[0] == 0x20 && raw[1] == 0x01 && raw[2] == 0x00 && raw[3] == 0x00)
+							addrs.addLast(addr);
+						else
+							addrs.addFirst(addr);
 					}
+					
+					if (type == Inet4Address.class && inetAddress instanceof Inet4Address) {
+						Inet4Address addr = (Inet4Address) inetAddress;
+
+						// with multihoming we only accept globals
+						if (multiHoming && !isGlobalUnicast(addr))
+							continue;
+						// without multihoming we'll accept site-local addresses too, since they could be NATed
+						if (addr.isLinkLocalAddress() || addr.isLoopbackAddress())
+							continue;
+						
+						addrs.add(addr);
+					}
+					
 				} catch (Throwable e) {
 					// getting an NPE in JDK core here for some users (see http://forum.vuze.com/thread.jspa?threadID=100341)
 				}

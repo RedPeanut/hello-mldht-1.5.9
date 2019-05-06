@@ -66,7 +66,7 @@ public class Key implements Comparable<Key>, Serializable {
 	 * Key's in the distributed hash table are just SHA-1 hashes.
 	 * Key provides all necesarry operators to be used as a value.
 	 */
-	protected Key () {
+	protected Key() {
 	}
 
 	/**
@@ -74,7 +74,7 @@ public class Key implements Comparable<Key>, Serializable {
 	 *
 	 * @param k Key to clone
 	 */
-	public Key (Key k) {
+	public Key(Key k) {
 		System.arraycopy(k.hash, 0, hash, 0, SHA1_HASH_LENGTH);
 	}
 	
@@ -126,8 +126,10 @@ public class Key implements Comparable<Key>, Serializable {
 	 */
 	public int threeWayDistance(Key k1, Key k2) {
 		for (int i = 0,n=hash.length; i < n; i++) {
+			
 			if (k1.hash[i] == k2.hash[i])
 				continue;
+			
 			//needs & 0xFF since bytes are signed in Java
 			//so we must convert to int to compare it unsigned
 			int byte1 = (k1.hash[i] ^ hash[i]) & 0xFF;
@@ -141,7 +143,7 @@ public class Key implements Comparable<Key>, Serializable {
 	}
 
 
-	public boolean equals (Object o) {
+	public boolean equals(Object o) {
 		if (this == o)
 			return true;
 		if (o instanceof Key) {
@@ -157,7 +159,7 @@ public class Key implements Comparable<Key>, Serializable {
 	/**
 	 * @return the hash
 	 */
-	public byte[] getHash () {
+	public byte[] getHash() {
 		return hash.clone();
 	}
 	
@@ -177,7 +179,7 @@ public class Key implements Comparable<Key>, Serializable {
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
-	public int hashCode () {
+	public int hashCode() {
 		return (hash[0] ^ hash[1] ^ hash[2] ^ hash[3] ^ hash[4]) << 24
 				| (hash[5] ^ hash[6] ^ hash[7] ^ hash[8] ^ hash[9]) << 16
 				| (hash[10] ^ hash[11] ^ hash[12] ^ hash[13] ^ hash[14]) << 8
@@ -188,7 +190,7 @@ public class Key implements Comparable<Key>, Serializable {
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
-	public String toString () {
+	public String toString() {
 		return toString(true);
 	}
 	

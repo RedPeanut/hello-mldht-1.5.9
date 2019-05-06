@@ -21,5 +21,5 @@ package lbms.plugins.mldht.kad;
  *
  */
 public interface DHTStatsListener {
-	public void statsUpdated (DHTStats stats);
+	public void statsUpdated(DHTStats stats);
 }

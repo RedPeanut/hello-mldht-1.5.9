@@ -366,7 +366,7 @@ public class DHT implements DHTBase {
 		if (node.allLocalIDs().contains(r.getID())) {
 			return;
 		}
-
+		
 		/*Log.d(TAG, "announce() is called...");
 		//Util.printRequest(TAG, r);
 		InetSocketAddress isa = r.getOrigin();

@@ -369,8 +369,7 @@ public class RPCServer implements Runnable, RPCServerBase {
 		
 		if (DHT.isLogLevelEnabled(LogLevel.Verbose)) {
 			try {
-				DHT.logVerbose(new String(p.getData(), 0, p.getLength(),
-						"UTF-8"));
+				DHT.logVerbose(new String(p.getData(), 0, p.getLength(), "UTF-8"));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -383,18 +382,29 @@ public class RPCServer implements Runnable, RPCServerBase {
 				if (DHT.isLogLevelEnabled(LogLevel.Debug))
 					DHT.logDebug("RPC received message ["+p.getAddress().getHostAddress()+"] "+msg.toString());
 				
-				if (msg.getMethod() == Method.PING) {
-					//Log.d(TAG, "PING response is received...");
-				} else if (msg.getMethod() == Method.FIND_NODE) {
-					//Log.d(TAG, "FIND_NODE response is received...");
-					/*if (SingleCounter9.getInstance().getAndIncreaseCount() == 1)
-						new Throwable().printStackTrace();*/
-				} else if (msg.getMethod() == Method.GET_PEERS) {
-					//Log.d(TAG, "GET_PEERS response is received...");
-				} else if (msg.getMethod() == Method.ANNOUNCE_PEER) {
-					//Log.d(TAG, "ANNOUNCE_PEER response is received...");
+				if (msg.getType() == Type.REQ_MSG) {
+					if (msg.getMethod() == Method.PING) {
+						//Log.d(TAG, "PING request is received...");
+					} else if (msg.getMethod() == Method.FIND_NODE) {
+						//Log.d(TAG, "FIND_NODE request is received...");
+					} else if (msg.getMethod() == Method.GET_PEERS) {
+						//Log.d(TAG, "GET_PEERS request is received...");
+					} else if (msg.getMethod() == Method.ANNOUNCE_PEER) {
+						//Log.d(TAG, "ANNOUNCE_PEER request is received...");
+					}
+				} else if (msg.getType() == Type.RSP_MSG) {
+					if (msg.getMethod() == Method.PING) {
+						//Log.d(TAG, "PING response is received...");
+					} else if (msg.getMethod() == Method.FIND_NODE) {
+						//Log.d(TAG, "FIND_NODE response is received...");
+						/*if (SingleCounter9.getInstance().getAndIncreaseCount() == 1)
+							new Throwable().printStackTrace();*/
+					} else if (msg.getMethod() == Method.GET_PEERS) {
+						//Log.d(TAG, "GET_PEERS response is received...");
+					} else if (msg.getMethod() == Method.ANNOUNCE_PEER) {
+						//Log.d(TAG, "ANNOUNCE_PEER response is received...");
+					}
 				}
-					
 				
 				stats.addReceivedMessageToCount(msg);
 				msg.setOrigin(new InetSocketAddress(p.getAddress(), p.getPort()));

@@ -18,15 +18,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
 package lbms.plugins.mldht.kad;
 
 import java.net.InetSocketAddress;
 
-public interface 
-RPCServerListener 
-{
-	public void
-	replyReceived(
-		InetSocketAddress	from_node );
+public interface RPCServerListener {
+	public void replyReceived(InetSocketAddress fromNode);
 }
