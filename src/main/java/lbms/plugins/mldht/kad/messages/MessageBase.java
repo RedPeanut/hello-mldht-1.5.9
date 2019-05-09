@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import gudy.azureus2.core3.util.BEncoder;
+import hello.util.Util;
 import lbms.plugins.mldht.kad.DHT;
 import lbms.plugins.mldht.kad.DHTConstants;
 import lbms.plugins.mldht.kad.Key;
@@ -163,9 +164,13 @@ public abstract class MessageBase {
 	
 	@Override
 	public String toString() {
-		return " Method:" + method + " Type:" + type + " MessageID:" + new String(mtid)+(version != null ? " version:"+version : "")+"  ";
+		return " Method:" + method + " Type:" + type + " Key:" + id.toString(false) + " MessageID:" + new String(Util.toHexString(mtid))+(version != null ? " version:"+version : "")+"  ";
 	}
 
+	public void print() {
+		Util.printMap("", getBase(), "", false);
+	}
+	
 	public static enum Type {
 		REQ_MSG {
 			String innerKey() {	return "a";	}

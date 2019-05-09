@@ -42,22 +42,23 @@ public class Util {
 	
 	public static String INDENT = "    ";
 	
-	public static <K, V> void printMap(String key, Map<K, V> map, String indent) {
+	public static <K, V> void printMap(String key, Map<K, V> map, String indent, boolean newLine) {
 		if (map != null) {
 			
-			System.out.println(indent + (key.isEmpty() ? "" : key + " = ") + "{");
+			System.out.print(indent + (key.isEmpty() ? "" : key + "=") + "{");
+			if (newLine) System.out.println("");
 			
 			Set<K> keys = map.keySet();
 			for (Iterator<K> itor = keys.iterator(); itor.hasNext();) {
 				String _key = itor.next().toString();
 				V value = map.get(_key);
 				if (value instanceof Map) {
-					printMap(_key, (Map) value, indent + INDENT);
+					printMap(_key, (Map) value, indent+indent, newLine);
 				} else if (value instanceof List) {
-					printList(_key, (List) value, indent + INDENT);
+					printList(_key, (List) value, indent+indent, newLine);
 				} else if (value instanceof Object[]) {
 					//printArray();
-					System.out.print(indent + INDENT + _key + " = [");
+					System.out.print(indent+indent + _key + "=[");
 					Object[] values = (Object[]) value;
 					for (int i = 0; i < values.length; i++) {
 						System.out.print(values[i]);
@@ -65,34 +66,39 @@ public class Util {
 							System.out.print(",");
 					}
 					System.out.print("]");
-					boolean addComma = itor.hasNext();
-					System.out.println(addComma ? "," : "");
 				} else {
-					boolean addComma = itor.hasNext();
-					System.out.println(indent + INDENT + _key + " = " + value + (addComma ? "," : ""));
+					System.out.print(indent+indent + _key + "=" + value);
 				}
+				
+				boolean addComma = itor.hasNext();
+				System.out.print(addComma ? "," : "");
+				if (newLine) System.out.println("");
 			}
 			
-			System.out.println(indent + "}");
+			System.out.print(indent + "}");
+			if (newLine) System.out.println("");
 		}
 	}
 	
-	public static <T> void printList(String key, List<T> list, String indent) {
+	public static <T> void printList(String key, List<T> list, String indent, boolean newLine) {
 		if (list != null) {
 			
-			System.out.println(indent + (key.isEmpty() ? "" : key + " = ") + "[");
+			System.out.print(indent + (key.isEmpty() ? "" : key + "=") + "[");
+			if (newLine) System.out.println("");
 			
 			for (int i = 0; i < list.size(); i++) {
 				T value = list.get(i);
 				if (value instanceof Map)
-					printMap("", (Map) value, indent + INDENT);
+					printMap("", (Map) value, indent+indent, newLine);
 				else {
 					boolean addComma = (i != list.size() - 1);
-					System.out.println(String.format(indent + INDENT + "[%s] %s" + (addComma ? "," : ""), i, list.get(i)));
+					System.out.print(String.format(indent+indent + "[%s] %s" + (addComma ? "," : ""), i, list.get(i)));
+					if (newLine) System.out.println("");
 				}
 			}
 			
-			System.out.println(indent + "]");
+			System.out.print(indent + "]");
+			if (newLine) System.out.println("");
 		}
 	}
 

@@ -21,6 +21,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+import hello.util.Util;
 import lbms.plugins.mldht.kad.utils.ThreadLocalUtils;
 
 /**
@@ -78,7 +79,7 @@ public class Key implements Comparable<Key>, Serializable {
 		System.arraycopy(k.hash, 0, hash, 0, SHA1_HASH_LENGTH);
 	}
 	
-	public Key (String hex) {
+	public Key(String hex) {
 	    if (hex.length() != 40)
 	    	throw new IllegalArgumentException("Hex String must have 40 bytes");
 	    
@@ -92,7 +93,7 @@ public class Key implements Comparable<Key>, Serializable {
 	 *
 	 * @param hash the SHA1 hash, has to be 20 bytes
 	 */
-	public Key (byte[] hash) {
+	public Key(byte[] hash) {
 		if (hash.length != SHA1_HASH_LENGTH) {
 			throw new IllegalArgumentException(
 					"Invalid Hash must be 20bytes, was: " + hash.length);
@@ -103,7 +104,7 @@ public class Key implements Comparable<Key>, Serializable {
 	/*
 	 * compares Keys according to their natural distance
 	 */
-	public int compareTo (Key o) {
+	public int compareTo(Key o) {
 		for (int i = 0,n=hash.length; i < n; i++) {
 			//needs & 0xFF since bytes are signed in Java
 			//so we must convert to int to compare it unsigned
@@ -273,7 +274,7 @@ public class Key implements Comparable<Key>, Serializable {
 	 * @param b
 	 * @return new Key (a.hash ^ b.hash);
 	 */
-	public static Key distance (Key a, Key b) {
+	public static Key distance(Key a, Key b) {
 		Key x = new Key();
 		for (int i = 0; i < a.hash.length; i++) {
 			x.hash[i] = (byte) (a.hash[i] ^ b.hash[i]);
@@ -286,7 +287,7 @@ public class Key implements Comparable<Key>, Serializable {
 	 *
 	 * @return newly generated random Key
 	 */
-	public static Key createRandomKey () {
+	public static Key createRandomKey() {
 		Key x = new Key();
 		ThreadLocalUtils.getThreadLocalRandom().nextBytes(x.hash);
 		return x;

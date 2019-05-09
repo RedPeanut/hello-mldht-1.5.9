@@ -368,20 +368,17 @@ public class RPCServer implements Runnable, RPCServerBase {
 		if (p.getPort() == 0)
 			return;
 		
-		if (DHT.isLogLevelEnabled(LogLevel.Verbose)) {
-			try {
-				DHT.logVerbose(new String(p.getData(), 0, p.getLength(), "UTF-8"));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
 
 		try {
 			Map<String, Object> bedata = decoder.decodeByteArray(p.getData(), 0, p.getLength() , false);
 			MessageBase msg = MessageDecoder.parseMessage(bedata, this);
 			if (msg != null) {
-				if (DHT.isLogLevelEnabled(LogLevel.Debug))
-					DHT.logDebug("RPC received message ["+p.getAddress().getHostAddress()+"] "+msg.toString());
+				
+				if (DHT.isLogLevelEnabled(LogLevel.Verbose)) {
+					DHT.logVerbose(new String(p.getData(), 0, p.getLength(), "UTF-8"));
+					DHT.logVerbose("RPC received message ["+p.getAddress().getHostAddress()+"] "+msg.toString());
+					msg.print(); System.out.println("");
+				}
 				
 				if (msg.getType() == Type.REQ_MSG) {
 					if (msg.getMethod() == Method.PING) {
@@ -458,9 +455,16 @@ public class RPCServer implements Runnable, RPCServerBase {
 			if (msg.getID() == null)
 				msg.setID(getDerivedID());
 			stats.addSentMessageToCount(msg);
-			send(msg.getDestination(), msg.encode());
-			if (DHT.isLogLevelEnabled(LogLevel.Debug))
-				DHT.logDebug("RPC send Message: [" + msg.getDestination().getAddress().getHostAddress() + "] "+ msg.toString());
+			
+			byte[] encode = msg.encode();
+			send(msg.getDestination(), encode);
+			
+			if (DHT.isLogLevelEnabled(LogLevel.Verbose)) {
+				DHT.logVerbose(new String(encode, 0, encode.length, "UTF-8"));
+				DHT.logVerbose("RPC send Message: [" + msg.getDestination().getAddress().getHostAddress() + "] "+ msg.toString());
+				msg.print(); System.out.println("");
+			}
+			
 		} catch (IOException e) {
 			System.out.print(sock.getLocalAddress()+" -> "+msg.getDestination()+" ");
 			e.printStackTrace();
@@ -483,17 +487,6 @@ public class RPCServer implements Runnable, RPCServerBase {
 					sock.send(p);
 				} else {
 					throw e;
-				}
-			}
-			
-			if (DHT.isLogLevelEnabled(LogLevel.Verbose)) {
-				
-				DHT.logVerbose(Util.toHexString(p.getData(), 0, p.getLength()));
-				
-				try {
-					DHT.logVerbose(new String(p.getData(), 0, p.getLength(), "UTF-8"));
-				} catch (Exception e) {
-					e.printStackTrace();
 				}
 			}
 			
