@@ -50,7 +50,6 @@ public class GetPeersResponse extends MessageBase {
 		this.token = token;
 	}
 	
-	
 	/* (non-Javadoc)
 	 * @see lbms.plugins.mldht.kad.messages.MessageBase#apply(lbms.plugins.mldht.kad.DHT)
 	 */

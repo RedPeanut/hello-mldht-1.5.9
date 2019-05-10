@@ -103,7 +103,7 @@ public class PingRefreshTask extends Task {
 	 * @see lbms.plugins.mldht.kad.Task#callTimeout(lbms.plugins.mldht.kad.RPCCallBase)
 	 */
 	@Override
-	void callTimeout (RPCCallBase c) {
+	void callTimeout(RPCCallBase c) {
 		if (cleanOnTimeout) {
 			MessageBase mb = c.getRequest();
 
@@ -125,7 +125,7 @@ public class PingRefreshTask extends Task {
 	 * @see lbms.plugins.mldht.kad.Task#update()
 	 */
 	@Override
-	void update () {
+	void update() {
 		// go over the todo list and send ping
 		// until we have nothing left
 		synchronized (todo) {

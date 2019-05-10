@@ -123,7 +123,6 @@ public class PeerLookupTask extends Task {
 							todo.add(e);
 					}
 				}
-
 			} else {
 				for (int i = 0; i < nval; i++) {
 					KBucketEntry e = PackUtil.UnpackBucketEntry(nodes, i * type.NODES_ENTRY_LENGTH, type);
@@ -131,7 +130,7 @@ public class PeerLookupTask extends Task {
 				}
 			}
 		}
-
+		
 		List<DBItem> items = gpr.getPeerItems();
 		boolean newItem = false;
 		//if (items.size() > 0)
@@ -196,7 +195,7 @@ public class PeerLookupTask extends Task {
 	 * @see lbms.plugins.mldht.kad.Task#callTimeout(lbms.plugins.mldht.kad.RPCCall)
 	 */
 	@Override
-	void callTimeout (RPCCallBase c) {
+	void callTimeout(RPCCallBase c) {
 		cache.removeEntry(c.getExpectedID());
 	}
 	
@@ -278,7 +277,7 @@ public class PeerLookupTask extends Task {
 	/**
 	 * @return the info_hash
 	 */
-	public Key getInfoHash () {
+	public Key getInfoHash() {
 		return targetKey;
 	}
 

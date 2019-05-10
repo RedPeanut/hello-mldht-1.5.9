@@ -34,7 +34,7 @@ public class KBucketEntryAndToken extends KBucketEntry {
 	/**
 	 * @return the token
 	 */
-	public Token getToken () {
+	public Token getToken() {
 		return token;
 	}
 
@@ -42,7 +42,7 @@ public class KBucketEntryAndToken extends KBucketEntry {
 	 * @see lbms.plugins.mldht.kad.KBucketEntry#equals(java.lang.Object)
 	 */
 	@Override
-	public boolean equals (Object obj) {
+	public boolean equals(Object obj) {
 		if (obj instanceof KBucketEntryAndToken) {
 			KBucketEntryAndToken kbet = (KBucketEntryAndToken) obj;
 			if (super.equals(obj))
@@ -56,7 +56,7 @@ public class KBucketEntryAndToken extends KBucketEntry {
 	 * @see lbms.plugins.mldht.kad.KBucketEntry#hashCode()
 	 */
 	@Override
-	public int hashCode () {
+	public int hashCode() {
 		return super.hashCode() ^ token.hashCode();
 	}
 }

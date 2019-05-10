@@ -262,7 +262,7 @@ public class Node {
 	/**
 	 * Check if a buckets needs to be refreshed, and refresh if necesarry.
 	 */
-	public void doBucketChecks (long now) {
+	public void doBucketChecks(long now) {
 		
 		/*
 		for (RoutingTableEntry e : routingTable)
@@ -300,8 +300,9 @@ public class Node {
 		
 		// don't spam the checks if we're not receiving anything.
 		// we don't want to cause stray packets somewhere in a network
-		if (survivalMode && now - timeOfLastPingCheck > DHTConstants.BOOTSTRAP_MIN_INTERVAL)
+		if (survivalMode && now-timeOfLastPingCheck > DHTConstants.BOOTSTRAP_MIN_INTERVAL)
 			return;
+		
 		timeOfLastPingCheck = now;
 
 		synchronized (routingTableCoWLock) {
@@ -370,8 +371,6 @@ public class Node {
 				if (allLocalIDs().contains(entry.getID()))
 					b.removeEntry(entry, true);
 				allBad &= entry.isBad();
-				
-				
 			}
 
 			// clean out buckets full of bad nodes. merge operations will do the rest
@@ -379,7 +378,6 @@ public class Node {
 				e.bucket = new KBucket(this);
 				continue;
 			}
-				
 			
 			if (b.needsToBeRefreshed()) {
 				// if the bucket survived that test, ping it
@@ -390,14 +388,12 @@ public class Node {
 					b.setRefreshTask(nl);
 					nl.setInfo("Refreshing Bucket #" + e.prefix);
 				}
-
 			} else if (!survivalMode) {
 				// only replace 1 bad entry with a replacement bucket entry at a time (per bucket)
 				b.checkBadEntries();
 			}
 			
 			newEntryCount += e.bucket.getNumEntries();
-
 
 		}
 		

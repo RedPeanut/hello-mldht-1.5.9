@@ -1143,7 +1143,7 @@ public class DHT implements DHTBase {
 		return findNode(id, false, true, true, server);
 	}
 
-	public PingRefreshTask refreshBucket (KBucket bucket) {
+	public PingRefreshTask refreshBucket(KBucket bucket) {
 		if (!isRunning()) {
 			return null;
 		}

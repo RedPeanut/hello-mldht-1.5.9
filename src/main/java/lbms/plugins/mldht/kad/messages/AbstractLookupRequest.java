@@ -60,7 +60,7 @@ public abstract class AbstractLookupRequest extends MessageBase {
 	/**
 	 * @return the info_hash
 	 */
-	public Key getTarget () {
+	public Key getTarget() {
 		return target;
 	}
 
