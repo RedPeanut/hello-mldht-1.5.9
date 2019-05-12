@@ -608,7 +608,7 @@ public class Node {
 		ObjectInputStream ois = null;
 		try {
 			ois = new ObjectInputStream(new FileInputStream(file));
-			Util.printMap("", (Map<String, Serializable>) ois.readObject(), "    ", true);
+			Util.printMap("", (Map<String, Serializable>) ois.readObject(), "", Util.INDENT, true);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {

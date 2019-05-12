@@ -70,7 +70,6 @@ public class UI {
 		
 		/*Display*/ display = new Display();
 		
-		
 		Shell shell = new Shell(display);
 		shell.setText("Hello, world!");
 		//shell.setLayout(new FormLayout());

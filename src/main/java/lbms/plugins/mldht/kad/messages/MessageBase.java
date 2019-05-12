@@ -168,7 +168,7 @@ public abstract class MessageBase {
 	}
 
 	public void print() {
-		Util.printMap("", getBase(), "", false);
+		Util.printMap("", getBase(), "", "", false);
 	}
 	
 	public static enum Type {
