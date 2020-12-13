@@ -153,7 +153,7 @@ public class AnnounceNodeCache {
 			closestSet.addAll(floor.getValue().entries);
 		
 		// note that an expanding binary search only yields an _approximate_ closest set since we're not using buckets
-		while(closestSet.size() / 2 < count && (floor != null || ceil != null)) {
+		while (closestSet.size() / 2 < count && (floor != null || ceil != null)) {
 			if (floor != null)
 				floor = cache.lowerEntry(floor.getKey());
 			if (ceil != null)

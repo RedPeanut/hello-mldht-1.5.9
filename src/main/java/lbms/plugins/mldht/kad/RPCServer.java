@@ -239,7 +239,6 @@ public class RPCServer implements Runnable, RPCServerBase {
 		thread.setPriority(Thread.MIN_PRIORITY);
 		thread.setDaemon(true);
 		thread.start();
-		
 
 	}
 

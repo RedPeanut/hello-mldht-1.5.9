@@ -76,8 +76,7 @@ public class NodeLookupTask extends Task {
 			}
 		}
 
-		if (todo.size() == 0 && getNumOutstandingRequests() == 0
-				&& !isFinished()) {
+		if (todo.size() == 0 && getNumOutstandingRequests() == 0 && !isFinished()) {
 			done();
 		} else if (getNumOutstandingRequests() == 0 && validReponsesSinceLastClosestSetModification >= DHTConstants.MAX_CONCURRENT_REQUESTS) {
 			done(); // quit after 10 nodes responsed
@@ -167,7 +166,7 @@ public class NodeLookupTask extends Task {
 	}
 
 	@Override
-	protected void done () {
+	protected void done() {
 		super.done();
 
 		rpc.getDHT().getEstimator().update(new TreeSet<Key>(closestSet));

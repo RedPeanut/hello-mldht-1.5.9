@@ -77,7 +77,7 @@ public abstract class Task implements RPCCallListener {
 	 * @param node The node
 	 * @param info info that should be displayed to the user, eg. download name on announce task
 	 */
-	Task (Key target, RPCServerBase rpc, Node node, String info) {
+	Task(Key target, RPCServerBase rpc, Node node, String info) {
 		this(target, rpc, node);
 		this.info = info;
 	}
@@ -120,7 +120,7 @@ public abstract class Task implements RPCCallListener {
 	/* (non-Javadoc)
 	 * @see lbms.plugins.mldht.kad.RPCCallListener#onTimeout(lbms.plugins.mldht.kad.RPCCall)
 	 */
-	public void onTimeout (RPCCallBase c) {
+	public void onTimeout(RPCCallBase c) {
 		
 		if (!c.wasStalled())
 			outstandingRequestsExcludingStalled.decrementAndGet();
@@ -158,7 +158,7 @@ public abstract class Task implements RPCCallListener {
 	 * Will continue the task, this will be called every time we have
 	 * rpc slots available for this task. Should be implemented by derived classes.
 	 */
-	//abstract void update ();
+	//abstract void update();
 	void update() {
 		System.out.println("update() is called...");
 	}
@@ -190,6 +190,7 @@ public abstract class Task implements RPCCallListener {
 	 * @return true if call was made, false if not
 	 */
 	boolean rpcCall(MessageBase req, Key expectedID) {
+		
 		if (!canDoRequest()) {
 			return false;
 		}
@@ -311,7 +312,7 @@ public abstract class Task implements RPCCallListener {
 			/* (non-Javadoc)
 			 * @see java.lang.Runnable#run()
 			 */
-			public void run () {
+			public void run() {
 				if (!taskFinished) {
 					DHT.logDebug("Task was Killed by Timeout. TaskID: "
 							+ taskID);

@@ -151,7 +151,6 @@ public class PeerLookupTask extends Task {
 		}
 		
 		KBucketEntry entry = new KBucketEntry(rsp.getOrigin(), rsp.getID());
-		
 		cache.add(entry);
 		
 		KBucketEntryAndToken toAdd = new KBucketEntryAndToken(entry, gpr.getToken());

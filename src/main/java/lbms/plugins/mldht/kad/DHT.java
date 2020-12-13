@@ -463,17 +463,13 @@ public class DHT implements DHTBase {
 		return announce;
 	}
 	
-	
-
-	public PingRefreshTask refreshBuckets(List<RoutingTableEntry> buckets,
-			boolean cleanOnTimeout) {
+	public PingRefreshTask refreshBuckets(List<RoutingTableEntry> buckets, boolean cleanOnTimeout) {
+		
 		RPCServer server = getRandomServer();
-		if (server == null) {
+		if (server == null)
 			return(null);
-		}
-		PingRefreshTask prt = new PingRefreshTask(server, node, buckets,
-				cleanOnTimeout);
-
+		
+		PingRefreshTask prt = new PingRefreshTask(server, node, buckets, cleanOnTimeout);
 		taskManager.addTask(prt, true);
 		return prt;
 	}

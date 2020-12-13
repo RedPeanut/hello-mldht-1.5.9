@@ -35,8 +35,8 @@ import lbms.plugins.mldht.kad.utils.PackUtil;
  */
 public class AnnounceTask extends Task {
 
-	private int								port;
-	private boolean							isSeed;
+	private int				port;
+	private boolean			isSeed;
 	
 	public AnnounceTask (RPCServerBase rpc, Node node,
 			Key info_hash, int port) {

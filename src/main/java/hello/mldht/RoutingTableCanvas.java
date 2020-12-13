@@ -146,7 +146,7 @@ public class RoutingTableCanvas {
 
 	}
 
-	private void showTooltip (Event event) {
+	private void showTooltip(Event event) {
 		if (toolTipShell != null && !toolTipShell.isDisposed()) {
 			toolTipShell.dispose();
 		}
@@ -196,7 +196,6 @@ public class RoutingTableCanvas {
 		RoutingTableEntry e = routingTable.getBuckets().get(nthBucket);
 		int yOffset = e.prefix.getDepth() * BUCKET_DEPTH_OFFSET + BUCKET_PADDING;
 		int xOffset = bucketXOffset * nthBucket + BUCKET_PADDING;
-		
 		
 		if (y < yOffset)
 			return null;
@@ -280,9 +279,7 @@ public class RoutingTableCanvas {
 
 	private void printPeers(GC gc) {
 
-		
 		List<RoutingTableEntry> buckets = routingTable.getBuckets(); 
-		
 		
 		for (int i = 0; i < buckets.size(); i++) {
 			RoutingTableEntry rtEntry = buckets.get(i);

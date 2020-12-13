@@ -27,49 +27,42 @@ import lbms.plugins.mldht.kad.utils.ResponseTimeoutFilter;
  */
 public interface RPCServerBase {
 
-	public void start ();
-
+	public void start();
 	public boolean isRunning();
-	
-	public void destroy ();
+	public void destroy();
 
 	/**
 	 * Do a RPC call.
 	 * @param msg The message to send
 	 * @return The call object
 	 */
-	public RPCCall doCall (MessageBase msg);
+	public RPCCall doCall(MessageBase msg);
 
 	/**
 	 * Send a message, this only sends the message, it does not keep any call
 	 * information. This should be used for replies.
 	 * @param msg The message to send
 	 */
-	public void sendMessage (MessageBase msg);
+	public void sendMessage(MessageBase msg);
 
 	/**
 	 * Ping a node, we don't care about the MTID.
 	 * @param addr The address
 	 */
-	public void ping (InetSocketAddress addr);
+	public void ping(InetSocketAddress addr);
 
 	/**
 	 * Find a RPC call, based on the mtid
 	 * @param mtid The mtid
 	 * @return The call
 	 */
-	public RPCCallBase findCall (byte[] mtid);
+	public RPCCallBase findCall(byte[] mtid);
 
 	/// Get the number of active calls
-	public int getNumActiveRPCCalls ();
-
-	public int getNumReceived ();
-
-	public int getNumSent ();
-
-	public RPCStats getStats ();
-
+	public int getNumActiveRPCCalls();
+	public int getNumReceived();
+	public int getNumSent();
+	public RPCStats getStats();
 	public DHT getDHT();
-
 	public ResponseTimeoutFilter getTimeoutFilter();
 }
